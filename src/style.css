@@ -488,6 +488,40 @@ button.secondary.danger:hover {
   font-size: 0.85rem;
 }
 
+.update-banner {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px max(12px, env(safe-area-inset-right)) 10px max(12px, env(safe-area-inset-left));
+  padding-top: max(10px, env(safe-area-inset-top));
+  background: var(--color-primary);
+  color: var(--color-primary-fg);
+  font-size: 0.85rem;
+  box-shadow: var(--shadow-md);
+}
+
+.update-banner button.primary {
+  min-height: 32px;
+  padding: 6px 14px;
+  background: var(--color-primary-fg);
+  color: var(--color-primary);
+  box-shadow: none;
+}
+
+.update-banner button.secondary {
+  min-height: 32px;
+  padding: 6px 10px;
+  background: transparent;
+  border-color: color-mix(in srgb, var(--color-primary-fg) 50%, transparent);
+  color: var(--color-primary-fg);
+}
+
 .version-badge {
   position: fixed;
   right: max(10px, env(safe-area-inset-right));

@@ -25,7 +25,10 @@ export default defineConfig({
   },
   plugins: [
     VitePWA({
-      registerType: 'autoUpdate',
+      // 'prompt': a new service worker installs and waits rather than
+      // taking over immediately — the app must explicitly confirm the
+      // update (see src/update.ts) before it activates and reloads.
+      registerType: 'prompt',
       includeAssets: ['icons/*.png'],
       manifest: {
         name: 'QR Web App',
