@@ -38,8 +38,14 @@ export async function composeCardImage(card: CardProfile, qrCanvas: HTMLCanvasEl
   if (card.logo) {
     const bannerHeight = 66;
     const logoImg = await loadImage(card.logo);
-    const logoHeight = 40;
-    const logoWidth = logoImg.width * (logoHeight / logoImg.height);
+    // Contain-fit within a fixed box, matching the CSS `.card-logo` rule —
+    // scaling by the tighter of the two ratios keeps any source aspect
+    // ratio uniform instead of stretching it to fill the box.
+    const boxW = 160;
+    const boxH = 44;
+    const scale = Math.min(boxW / logoImg.width, boxH / logoImg.height);
+    const logoWidth = logoImg.width * scale;
+    const logoHeight = logoImg.height * scale;
     ctx.drawImage(logoImg, sidePadding, (bannerHeight - logoHeight) / 2, logoWidth, logoHeight);
     ctx.strokeStyle = BORDER_COLOR;
     ctx.beginPath();
@@ -50,7 +56,7 @@ export async function composeCardImage(card: CardProfile, qrCanvas: HTMLCanvasEl
   }
 
   const bodyPadding = 22;
-  const qrSize = 168;
+  const qrSize = 200;
   const qrX = sidePadding;
   const qrY = bodyTop + bodyPadding;
   ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
