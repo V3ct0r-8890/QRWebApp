@@ -38,14 +38,17 @@ export async function composeCardImage(card: CardProfile, qrCanvas: HTMLCanvasEl
 
   let bodyTop = 0;
   if (card.logo) {
-    // Larger logo field, per request.
-    const bannerHeight = 170;
+    // Logo banner enlarged 20% (170 -> 204), which pushes the QR/details
+    // block down by the same amount — this is the requested "shift down
+    // 20% to make the logo area larger", achieved structurally rather than
+    // by adding dead space below the banner.
+    const bannerHeight = 204;
     const logoImg = await loadImage(card.logo);
     // Contain-fit within a fixed box — scaling by the tighter of the two
     // ratios keeps any source aspect ratio uniform instead of stretching it
     // to fill the box, regardless of the uploaded image's own proportions.
-    const boxW = 380;
-    const boxH = 110;
+    const boxW = 456;
+    const boxH = 132;
     const scale = Math.min(boxW / logoImg.width, boxH / logoImg.height);
     const logoWidth = logoImg.width * scale;
     const logoHeight = logoImg.height * scale;

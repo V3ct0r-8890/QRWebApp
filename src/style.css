@@ -346,7 +346,7 @@ button.secondary.danger:hover {
   box-shadow: var(--shadow-sm);
 }
 
-.qr-output canvas {
+.qr-output canvas:not(.card-canvas-preview) {
   display: block;
   width: min(100%, 320px);
   aspect-ratio: 1 / 1;
@@ -372,8 +372,10 @@ button.secondary.danger:hover {
   display: block;
   width: 100%;
   height: auto;
-  /* Intrinsic canvas pixel size is 3:2 (set in composeCardImage.ts); CSS
-     just scales it down responsively without ever changing that ratio. */
+  aspect-ratio: 3 / 2;
+  /* Intrinsic canvas pixel size is 1200x800 (set in composeCardImage.ts, 3:2);
+     CSS just scales it down responsively to fit the 600x400 box without
+     ever changing that ratio. */
 }
 
 .logo-upload-row {
