@@ -73,11 +73,11 @@ export function renderCardsTab(container: HTMLElement): void {
           <div class="card-body">
             <canvas id="card-canvas"></canvas>
             <div class="card-info">
-              <p class="card-name">${escapeHtml(card.fullName)}</p>
-              ${card.title ? `<p>${escapeHtml(card.title)}</p>` : ''}
-              ${card.org ? `<p>${escapeHtml(card.org)}</p>` : ''}
-              ${card.email ? `<p>${escapeHtml(card.email)}</p>` : ''}
-              ${card.phone ? `<p>${escapeHtml(card.phone)}</p>` : ''}
+              <p class="card-name"><span class="card-field-label">Name:</span> ${escapeHtml(card.fullName)}</p>
+              ${card.title ? `<p><span class="card-field-label">Title:</span> ${escapeHtml(card.title)}</p>` : ''}
+              ${card.org ? `<p><span class="card-field-label">Company:</span> ${escapeHtml(card.org)}</p>` : ''}
+              ${card.email ? `<p><span class="card-field-label">Email:</span> ${escapeHtml(card.email)}</p>` : ''}
+              ${card.phone ? `<p><span class="card-field-label">Mobile:</span> ${escapeHtml(card.phone)}</p>` : ''}
             </div>
           </div>
         </div>
