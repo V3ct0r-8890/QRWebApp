@@ -437,33 +437,17 @@ button.secondary.danger:hover {
   border: 1px solid var(--color-border);
 }
 
-.card-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+.carousel-caption {
+  margin: 0 0 2px;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-fg);
 }
 
-.card-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 14px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  min-height: 44px;
-  box-shadow: var(--shadow-sm);
-  transition: border-color 0.15s ease;
-}
-
-.card-item:hover {
-  border-color: color-mix(in srgb, var(--color-primary) 35%, var(--color-border));
-}
-
-.card-item.active {
-  border-color: var(--color-primary);
-  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface));
+.history-preview-host {
+  display: block;
+  line-height: 0;
 }
 
 .empty-state {
