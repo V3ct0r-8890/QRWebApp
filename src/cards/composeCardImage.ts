@@ -46,7 +46,7 @@ export async function composeCardImage(card: CardProfile, qrCanvas: HTMLCanvasEl
     const scale = Math.min(boxW / logoImg.width, boxH / logoImg.height);
     const logoWidth = logoImg.width * scale;
     const logoHeight = logoImg.height * scale;
-    ctx.drawImage(logoImg, sidePadding, (bannerHeight - logoHeight) / 2, logoWidth, logoHeight);
+    ctx.drawImage(logoImg, (width - logoWidth) / 2, (bannerHeight - logoHeight) / 2, logoWidth, logoHeight);
     ctx.strokeStyle = BORDER_COLOR;
     ctx.beginPath();
     ctx.moveTo(0, bannerHeight);
@@ -56,7 +56,7 @@ export async function composeCardImage(card: CardProfile, qrCanvas: HTMLCanvasEl
   }
 
   const bodyPadding = 22;
-  const qrSize = 200;
+  const qrSize = 230;
   const qrX = sidePadding;
   const qrY = bodyTop + bodyPadding;
   ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
