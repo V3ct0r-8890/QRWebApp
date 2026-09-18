@@ -10,16 +10,17 @@ function loadImage(src: string): Promise<HTMLImageElement> {
 }
 
 const FONT_STACK = '"Segoe UI", system-ui, -apple-system, Roboto, sans-serif';
+const BORDER_COLOR = '#e3e5eb';
 
 /**
- * Composes logo (top, centered) + QR (left) + labeled contact text (right)
- * into a single 3:2 canvas, matching the on-screen card-preview layout, for
- * the "Download card image" action.
+ * Composes a full-width logo banner (top) + QR (left) + top-aligned labeled
+ * contact text (right) into a single 3:2 canvas, matching the on-screen
+ * card-preview layout, for the "Download card image" action.
  */
 export async function composeCardImage(card: CardProfile, qrCanvas: HTMLCanvasElement): Promise<HTMLCanvasElement> {
   const width = 600;
   const height = 400; // 3:2
-  const padding = 28;
+  const sidePadding = 26;
 
   const canvas = document.createElement('canvas');
   canvas.width = width;
@@ -29,19 +30,29 @@ export async function composeCardImage(card: CardProfile, qrCanvas: HTMLCanvasEl
 
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, width, height);
+  ctx.strokeStyle = BORDER_COLOR;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(0.5, 0.5, width - 1, height - 1);
 
-  let bodyTop = padding;
+  let bodyTop = 0;
   if (card.logo) {
+    const bannerHeight = 66;
     const logoImg = await loadImage(card.logo);
-    const logoSize = 110;
-    ctx.drawImage(logoImg, (width - logoSize) / 2, padding, logoSize, logoSize);
-    bodyTop = padding + logoSize + 18;
+    const logoHeight = 40;
+    const logoWidth = logoImg.width * (logoHeight / logoImg.height);
+    ctx.drawImage(logoImg, sidePadding, (bannerHeight - logoHeight) / 2, logoWidth, logoHeight);
+    ctx.strokeStyle = BORDER_COLOR;
+    ctx.beginPath();
+    ctx.moveTo(0, bannerHeight);
+    ctx.lineTo(width, bannerHeight);
+    ctx.stroke();
+    bodyTop = bannerHeight;
   }
 
-  const qrSize = 100;
-  const bodyAvailable = height - padding - bodyTop;
-  const qrX = padding;
-  const qrY = bodyTop + (bodyAvailable - qrSize) / 2;
+  const bodyPadding = 22;
+  const qrSize = 168;
+  const qrX = sidePadding;
+  const qrY = bodyTop + bodyPadding;
   ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
 
   type Field = { label: string; value?: string };
@@ -53,19 +64,18 @@ export async function composeCardImage(card: CardProfile, qrCanvas: HTMLCanvasEl
     { label: 'Mobile:', value: card.phone },
   ].filter((f) => f.value) as Field[];
 
-  const lineHeight = 30;
-  const textBlockHeight = fields.length * lineHeight;
-  const textX = qrX + qrSize + 28;
-  let textY = bodyTop + (bodyAvailable - textBlockHeight) / 2 + lineHeight * 0.7;
+  const lineHeight = 34;
+  const textX = qrX + qrSize + 24;
+  let textY = qrY + 22;
 
   ctx.textBaseline = 'alphabetic';
   for (const field of fields) {
-    ctx.font = `600 15px ${FONT_STACK}`;
+    ctx.font = `600 14px ${FONT_STACK}`;
     ctx.fillStyle = '#6b7280';
     ctx.fillText(field.label, textX, textY);
     const labelWidth = ctx.measureText(field.label).width;
 
-    ctx.font = field.label === 'Name:' ? `700 22px ${FONT_STACK}` : `400 18px ${FONT_STACK}`;
+    ctx.font = field.label === 'Name:' ? `700 20px ${FONT_STACK}` : `400 16px ${FONT_STACK}`;
     ctx.fillStyle = '#16181d';
     ctx.fillText(` ${field.value}`, textX + labelWidth, textY);
 

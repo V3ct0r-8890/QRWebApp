@@ -69,7 +69,7 @@ export function renderCardsTab(container: HTMLElement): void {
     slot.innerHTML = `
       <div class="qr-output">
         <div class="card-preview-inner">
-          ${card.logo ? `<img class="card-logo" src="${card.logo}" alt="" />` : ''}
+          ${card.logo ? `<div class="card-logo-banner"><img class="card-logo" src="${card.logo}" alt="" /></div>` : ''}
           <div class="card-body">
             <canvas id="card-canvas"></canvas>
             <div class="card-info">
