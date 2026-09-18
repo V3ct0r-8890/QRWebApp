@@ -18,13 +18,13 @@ export function renderCardsTab(container: HTMLElement): void {
   function renderList(): void {
     const cards = listCards();
     container.innerHTML = `
+      <div id="editor-slot"></div>
       <p>${cards.length} / ${MAX_CARDS} saved cards</p>
       <div class="card-list" id="card-list"></div>
       <button class="primary" id="add-card-btn" type="button" ${cards.length >= MAX_CARDS ? 'disabled' : ''}>
         + New card
       </button>
       <p class="error-text" id="list-error" hidden></p>
-      <div id="editor-slot"></div>
     `;
 
     const listEl = container.querySelector<HTMLDivElement>('#card-list')!;

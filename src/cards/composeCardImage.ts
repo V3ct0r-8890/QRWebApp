@@ -130,14 +130,28 @@ export async function composeCardImage(card: CardProfile, qrCanvas: HTMLCanvasEl
   }
 
   if (card.address) {
-    const addressMaxWidth = width - sidePadding * 2;
+    const addressLabel = 'Address:';
     const addressLineHeight = 32;
+    ctx.font = `600 26px ${FONT_STACK}`;
+    const labelWidth = ctx.measureText(addressLabel).width;
+    const labelGap = 8;
+
     ctx.font = `400 26px ${FONT_STACK}`;
-    ctx.fillStyle = '#6b7280';
+    // Reserve room for the label on every wrapped line — slightly
+    // conservative on line 2 (which has no label), but guarantees line 1
+    // never overflows past where the label pushes the text start.
+    const addressMaxWidth = width - sidePadding * 2 - labelWidth - labelGap;
     const lines = wrapText(ctx, card.address, addressMaxWidth, 2);
     let addressY = qrY + qrSize + 18 + 24; // gap below the QR row, then first-line baseline
+
+    ctx.font = `600 26px ${FONT_STACK}`;
+    ctx.fillStyle = '#6b7280';
+    ctx.fillText(addressLabel, sidePadding, addressY);
+
+    ctx.font = `400 26px ${FONT_STACK}`;
+    ctx.fillStyle = '#16181d';
     for (const line of lines) {
-      ctx.fillText(line, sidePadding, addressY);
+      ctx.fillText(line, sidePadding + labelWidth + labelGap, addressY);
       addressY += addressLineHeight;
     }
   }
