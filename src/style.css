@@ -358,8 +358,8 @@ button.secondary.danger:hover {
   /* Hosts the composed canvas (see composeCardImage.ts) — the same element
      shown here is what "Download card image" saves, so preview and saved
      file can never drift apart. */
-  width: 100%;
-  max-width: 480px;
+  width: 600px;
+  max-width: 100%;
   margin: 0 auto;
   box-sizing: border-box;
   border-radius: var(--radius);

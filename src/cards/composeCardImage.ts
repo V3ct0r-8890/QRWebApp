@@ -18,13 +18,11 @@ const BORDER_COLOR = '#e3e5eb';
  * card-preview layout, for the "Download card image" action.
  */
 export async function composeCardImage(card: CardProfile, qrCanvas: HTMLCanvasElement): Promise<HTMLCanvasElement> {
-  // All constants below are the previous layout scaled uniformly by 1.5x —
-  // this is what makes the QR "50% larger" while keeping every other
-  // proportion (banner, padding, text) consistent so nothing overlaps or
-  // overflows the 3:2 frame.
-  const width = 900;
-  const height = 600; // 3:2
-  const sidePadding = 39;
+  // Actual rendered resolution is 1200x800 (3:2) — 2x the CSS display size
+  // (600x400, set on .card-preview-inner) for a sharp/retina download.
+  const width = 1200;
+  const height = 800; // 3:2
+  const sidePadding = 52;
 
   const canvas = document.createElement('canvas');
   canvas.width = width;
@@ -40,13 +38,14 @@ export async function composeCardImage(card: CardProfile, qrCanvas: HTMLCanvasEl
 
   let bodyTop = 0;
   if (card.logo) {
-    const bannerHeight = 99;
+    // Larger logo field, per request.
+    const bannerHeight = 170;
     const logoImg = await loadImage(card.logo);
     // Contain-fit within a fixed box — scaling by the tighter of the two
     // ratios keeps any source aspect ratio uniform instead of stretching it
     // to fill the box, regardless of the uploaded image's own proportions.
-    const boxW = 240;
-    const boxH = 66;
+    const boxW = 380;
+    const boxH = 110;
     const scale = Math.min(boxW / logoImg.width, boxH / logoImg.height);
     const logoWidth = logoImg.width * scale;
     const logoHeight = logoImg.height * scale;
@@ -59,8 +58,10 @@ export async function composeCardImage(card: CardProfile, qrCanvas: HTMLCanvasEl
     bodyTop = bannerHeight;
   }
 
-  const bodyPadding = 33;
-  const qrSize = 345;
+  // QR + text block shifted down ~30% (bodyPadding 44 -> 57) to give the
+  // larger logo banner room to breathe instead of crowding the body.
+  const bodyPadding = 57;
+  const qrSize = 460;
   const qrX = sidePadding;
   const qrY = bodyTop + bodyPadding;
   ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
@@ -74,18 +75,18 @@ export async function composeCardImage(card: CardProfile, qrCanvas: HTMLCanvasEl
     { label: 'Mobile:', value: card.phone },
   ].filter((f) => f.value) as Field[];
 
-  const lineHeight = 51;
-  const textX = qrX + qrSize + 36;
-  let textY = qrY + 33;
+  const lineHeight = 68;
+  const textX = qrX + qrSize + 48;
+  let textY = qrY + 44;
 
   ctx.textBaseline = 'alphabetic';
   for (const field of fields) {
-    ctx.font = `600 21px ${FONT_STACK}`;
+    ctx.font = `600 28px ${FONT_STACK}`;
     ctx.fillStyle = '#6b7280';
     ctx.fillText(field.label, textX, textY);
     const labelWidth = ctx.measureText(field.label).width;
 
-    ctx.font = field.label === 'Name:' ? `700 30px ${FONT_STACK}` : `400 24px ${FONT_STACK}`;
+    ctx.font = field.label === 'Name:' ? `700 40px ${FONT_STACK}` : `400 32px ${FONT_STACK}`;
     ctx.fillStyle = '#16181d';
     ctx.fillText(` ${field.value}`, textX + labelWidth, textY);
 
