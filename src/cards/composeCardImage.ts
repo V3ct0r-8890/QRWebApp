@@ -22,7 +22,7 @@ export async function composeCardImage(card: CardProfile, qrCanvas: HTMLCanvasEl
   // (600x400, set on .card-preview-inner) for a sharp/retina download.
   const width = 1200;
   const height = 800; // 3:2
-  const sidePadding = 52;
+  const sidePadding = 36; // tightened so the layout spans closer to the card edge
 
   const canvas = document.createElement('canvas');
   canvas.width = width;
@@ -43,13 +43,13 @@ export async function composeCardImage(card: CardProfile, qrCanvas: HTMLCanvasEl
     // qrSize (460) is unchanged and the 1200x800 canvas is fixed, so this
     // is the largest banner+gap that still leaves a safe bottom margin
     // above the QR without touching the card border.
-    const bannerHeight = 236;
+    const bannerHeight = 283; // 20% larger
     const logoImg = await loadImage(card.logo);
     // Contain-fit within a fixed box — scaling by the tighter of the two
     // ratios keeps any source aspect ratio uniform instead of stretching it
     // to fill the box, regardless of the uploaded image's own proportions.
-    const boxW = 527;
-    const boxH = 153;
+    const boxW = 632;
+    const boxH = 184;
     const scale = Math.min(boxW / logoImg.width, boxH / logoImg.height);
     const logoWidth = logoImg.width * scale;
     const logoHeight = logoImg.height * scale;
@@ -62,8 +62,8 @@ export async function composeCardImage(card: CardProfile, qrCanvas: HTMLCanvasEl
     bodyTop = bannerHeight;
   }
 
-  const bodyPadding = 74;
-  const qrSize = 460;
+  const bodyPadding = 60; // tightened alongside sidePadding
+  const qrSize = 414; // 10% smaller
   const qrX = sidePadding;
   const qrY = bodyTop + bodyPadding;
   ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
@@ -78,8 +78,8 @@ export async function composeCardImage(card: CardProfile, qrCanvas: HTMLCanvasEl
   ].filter((f) => f.value) as Field[];
 
   const lineHeight = 68;
-  const textX = qrX + qrSize + 48;
-  let textY = qrY + 44;
+  const textX = qrX + qrSize + 40;
+  let textY = qrY + 40;
 
   ctx.textBaseline = 'alphabetic';
   for (const field of fields) {
