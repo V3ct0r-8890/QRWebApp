@@ -26,6 +26,9 @@ export function renderCardsTab(container: HTMLElement): void {
     `;
 
     const listEl = container.querySelector<HTMLDivElement>('#card-list')!;
+    if (cards.length === 0) {
+      listEl.innerHTML = `<div class="empty-state">No saved cards yet — add one below.</div>`;
+    }
     for (const card of cards) {
       const row = document.createElement('div');
       row.className = 'card-item';

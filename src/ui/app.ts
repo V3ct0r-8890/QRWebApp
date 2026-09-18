@@ -5,7 +5,13 @@ type TabId = 'generate' | 'cards';
 
 export function mountApp(root: HTMLElement): void {
   root.innerHTML = `
-    <h1>QR Web App</h1>
+    <header class="app-header">
+      <div class="logo-mark" aria-hidden="true">▦</div>
+      <div>
+        <h1>QR Web App</h1>
+        <p class="subtitle">Generate &amp; save QR codes, fully offline</p>
+      </div>
+    </header>
     <nav class="tabs" role="tablist">
       <button id="tab-generate" role="tab" aria-selected="true">Generate</button>
       <button id="tab-cards" role="tab" aria-selected="false">My Cards</button>
