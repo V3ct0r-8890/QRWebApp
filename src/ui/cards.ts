@@ -34,6 +34,7 @@ export function renderCardsTab(container: HTMLElement): void {
     for (const card of cards) {
       const row = document.createElement('div');
       row.className = 'card-item';
+      row.dataset.id = card.id;
       row.innerHTML = `
         <span>${escapeHtml(card.label)} — ${escapeHtml(card.fullName)}</span>
         <span class="row" style="flex:none;">
@@ -128,10 +129,22 @@ export function renderCardsTab(container: HTMLElement): void {
       }
     }
 
+    function syncListToCurrent(card: CardProfile): void {
+      const listEl = container.querySelector<HTMLDivElement>('#card-list');
+      if (!listEl) return;
+      for (const row of listEl.querySelectorAll<HTMLDivElement>('.card-item')) {
+        row.classList.toggle('active', row.dataset.id === card.id);
+      }
+      listEl
+        .querySelector<HTMLDivElement>(`.card-item[data-id="${card.id}"]`)
+        ?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+
     async function renderCurrent(): Promise<void> {
       composeErrorEl.hidden = true;
       const card = cards[index];
       positionEl.textContent = `${index + 1} / ${cards.length}`;
+      syncListToCurrent(card);
       try {
         const composed = await composeFor(card);
         host.innerHTML = '';
