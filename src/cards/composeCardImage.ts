@@ -38,17 +38,18 @@ export async function composeCardImage(card: CardProfile, qrCanvas: HTMLCanvasEl
 
   let bodyTop = 0;
   if (card.logo) {
-    // Logo banner enlarged 20% (170 -> 204), which pushes the QR/details
-    // block down by the same amount — this is the requested "shift down
-    // 20% to make the logo area larger", achieved structurally rather than
-    // by adding dead space below the banner.
-    const bannerHeight = 204;
+    // Logo area enlarged further (204 -> 236) and the gap below it widened
+    // 30% (57 -> 74), which together shift the QR/details block down.
+    // qrSize (460) is unchanged and the 1200x800 canvas is fixed, so this
+    // is the largest banner+gap that still leaves a safe bottom margin
+    // above the QR without touching the card border.
+    const bannerHeight = 236;
     const logoImg = await loadImage(card.logo);
     // Contain-fit within a fixed box — scaling by the tighter of the two
     // ratios keeps any source aspect ratio uniform instead of stretching it
     // to fill the box, regardless of the uploaded image's own proportions.
-    const boxW = 456;
-    const boxH = 132;
+    const boxW = 527;
+    const boxH = 153;
     const scale = Math.min(boxW / logoImg.width, boxH / logoImg.height);
     const logoWidth = logoImg.width * scale;
     const logoHeight = logoImg.height * scale;
@@ -61,9 +62,7 @@ export async function composeCardImage(card: CardProfile, qrCanvas: HTMLCanvasEl
     bodyTop = bannerHeight;
   }
 
-  // QR + text block shifted down ~30% (bodyPadding 44 -> 57) to give the
-  // larger logo banner room to breathe instead of crowding the body.
-  const bodyPadding = 57;
+  const bodyPadding = 74;
   const qrSize = 460;
   const qrX = sidePadding;
   const qrY = bodyTop + bodyPadding;
