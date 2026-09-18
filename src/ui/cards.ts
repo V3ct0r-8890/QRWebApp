@@ -63,13 +63,20 @@ export function renderCardsTab(container: HTMLElement): void {
   }
 
   function showViewer(id: string): void {
-    const found = listCards().find((c) => c.id === id);
-    if (!found) return;
-    const card: CardProfile = found;
+    const cards = listCards();
+    if (cards.length === 0) return;
+    const startIndex = cards.findIndex((c) => c.id === id);
+    let index = startIndex >= 0 ? startIndex : 0;
+
     const slot = container.querySelector<HTMLDivElement>('#editor-slot')!;
     slot.innerHTML = `
       <div class="qr-output">
-        <div class="card-preview-inner" id="card-preview-host"></div>
+        <div class="card-viewer" id="card-viewer">
+          <button class="card-nav-btn" id="card-nav-up" type="button" aria-label="Previous card" ${cards.length < 2 ? 'hidden' : ''}>▲</button>
+          <div class="card-preview-inner" id="card-preview-host"></div>
+          <button class="card-nav-btn" id="card-nav-down" type="button" aria-label="Next card" ${cards.length < 2 ? 'hidden' : ''}>▼</button>
+        </div>
+        <p class="card-position" id="card-position" ${cards.length < 2 ? 'hidden' : ''}></p>
         <div class="row">
           <button class="secondary" id="card-download-qr" type="button">Download QR</button>
           <button class="secondary" id="card-download-card" type="button">Download card image</button>
@@ -78,40 +85,130 @@ export function renderCardsTab(container: HTMLElement): void {
         <p class="error-text" id="card-compose-error" hidden></p>
       </div>
     `;
+    const viewerEl = slot.querySelector<HTMLDivElement>('#card-viewer')!;
     const host = slot.querySelector<HTMLDivElement>('#card-preview-host')!;
+    const positionEl = slot.querySelector<HTMLParagraphElement>('#card-position')!;
     const composeErrorEl = slot.querySelector<HTMLParagraphElement>('#card-compose-error')!;
+    const navUp = slot.querySelector<HTMLButtonElement>('#card-nav-up')!;
+    const navDown = slot.querySelector<HTMLButtonElement>('#card-nav-down')!;
 
-    // The raw QR lives on a detached canvas (never inserted into the DOM) —
-    // it only feeds composeCardImage() and the "Download QR" button.
-    const qrCanvas = document.createElement('canvas');
-    let composedCanvas: HTMLCanvasElement | null = null;
+    // Per-card caches, keyed by card id — populated once (in the background,
+    // for all cards, right away) and reused on every scroll/swipe so moving
+    // between cards is instant rather than re-rendering each time.
+    const qrCache = new Map<string, HTMLCanvasElement>();
+    const composedCache = new Map<string, HTMLCanvasElement>();
 
-    async function render(): Promise<void> {
-      await renderQrToCanvas(qrCanvas, buildVCardPayload(card));
-      // The on-screen preview renders the SAME composed canvas that gets
-      // downloaded, so the two can never drift apart — what you see here is
-      // pixel-for-pixel what "Download card image" saves.
-      composedCanvas = await composeCardImage(card, qrCanvas);
-      composedCanvas.className = 'card-canvas-preview';
-      host.innerHTML = '';
-      host.appendChild(composedCanvas);
+    async function getQrCanvas(card: CardProfile): Promise<HTMLCanvasElement> {
+      const cached = qrCache.get(card.id);
+      if (cached) return cached;
+      const c = document.createElement('canvas');
+      await renderQrToCanvas(c, buildVCardPayload(card));
+      qrCache.set(card.id, c);
+      return c;
     }
-    void render().catch((err) => {
-      composeErrorEl.textContent = err instanceof Error ? err.message : 'Could not render the card preview.';
-      composeErrorEl.hidden = false;
-    });
+
+    async function composeFor(card: CardProfile): Promise<HTMLCanvasElement> {
+      const cached = composedCache.get(card.id);
+      if (cached) return cached;
+      const qrCanvas = await getQrCanvas(card);
+      // The on-screen preview renders the SAME composed canvas that gets
+      // downloaded, so the two can never drift apart.
+      const composed = await composeCardImage(card, qrCanvas);
+      composed.className = 'card-canvas-preview';
+      composedCache.set(card.id, composed);
+      return composed;
+    }
+
+    function preloadAll(): void {
+      for (const c of cards) {
+        void composeFor(c).catch(() => {
+          // Best-effort — a failed preload just means that one card falls
+          // back to on-demand rendering when scrolled to.
+        });
+      }
+    }
+
+    async function renderCurrent(): Promise<void> {
+      composeErrorEl.hidden = true;
+      const card = cards[index];
+      positionEl.textContent = `${index + 1} / ${cards.length}`;
+      try {
+        const composed = await composeFor(card);
+        host.innerHTML = '';
+        host.appendChild(composed);
+      } catch (err) {
+        composeErrorEl.textContent = err instanceof Error ? err.message : 'Could not render the card preview.';
+        composeErrorEl.hidden = false;
+      }
+    }
+
+    function go(delta: number): void {
+      index = (index + delta + cards.length) % cards.length;
+      void renderCurrent();
+    }
+
+    preloadAll();
+    void renderCurrent();
+
+    navUp.addEventListener('click', () => go(-1));
+    navDown.addEventListener('click', () => go(1));
+
+    let wheelLocked = false;
+    viewerEl.addEventListener(
+      'wheel',
+      (e) => {
+        if (cards.length < 2) return;
+        e.preventDefault();
+        if (wheelLocked) return;
+        wheelLocked = true;
+        go(e.deltaY > 0 ? 1 : -1);
+        setTimeout(() => {
+          wheelLocked = false;
+        }, 350);
+      },
+      { passive: false },
+    );
+
+    let touchStartY: number | null = null;
+    viewerEl.addEventListener(
+      'touchstart',
+      (e) => {
+        touchStartY = e.touches[0]?.clientY ?? null;
+      },
+      { passive: true },
+    );
+    viewerEl.addEventListener(
+      'touchend',
+      (e) => {
+        if (touchStartY === null || cards.length < 2) return;
+        const endY = e.changedTouches[0]?.clientY ?? touchStartY;
+        const delta = touchStartY - endY;
+        touchStartY = null;
+        if (Math.abs(delta) < 30) return; // ignore taps / small jitter
+        go(delta > 0 ? 1 : -1);
+      },
+      { passive: true },
+    );
 
     slot.querySelector<HTMLButtonElement>('#card-download-qr')!.addEventListener('click', () => {
-      downloadCanvasAsPng(qrCanvas, `${card.label || 'card'}-qr`);
+      const card = cards[index];
+      void getQrCanvas(card).then((qrCanvas) => {
+        downloadCanvasAsPng(qrCanvas, `${card.label || 'card'}-qr`);
+      });
     });
     slot.querySelector<HTMLButtonElement>('#card-download-card')!.addEventListener('click', () => {
       composeErrorEl.hidden = true;
-      if (composedCanvas) {
-        downloadCanvasAsPng(composedCanvas, `${card.label || 'card'}`);
-      }
+      const card = cards[index];
+      composeFor(card)
+        .then((composed) => downloadCanvasAsPng(composed, `${card.label || 'card'}`))
+        .catch((err) => {
+          composeErrorEl.textContent = err instanceof Error ? err.message : 'Could not compose the card image.';
+          composeErrorEl.hidden = false;
+        });
     });
     slot.querySelector<HTMLButtonElement>('#card-edit')!.addEventListener('click', () => {
-      editingId = id;
+      const card = cards[index];
+      editingId = card.id;
       showEditor(card);
     });
   }

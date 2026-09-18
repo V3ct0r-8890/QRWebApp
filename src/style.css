@@ -354,6 +354,40 @@ button.secondary.danger:hover {
   border-radius: var(--radius-sm);
 }
 
+.card-viewer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  /* Vertical swipe/scroll is handled by JS (looping card navigation) —
+     stop the browser's own scroll gesture from competing with it. */
+  touch-action: none;
+}
+
+.card-nav-btn {
+  width: 100%;
+  max-width: 600px;
+  background: transparent;
+  border: none;
+  color: var(--color-muted);
+  font-size: 1rem;
+  line-height: 1;
+  padding: 4px;
+  cursor: pointer;
+  touch-action: auto;
+}
+
+.card-nav-btn:hover {
+  color: var(--color-primary);
+}
+
+.card-position {
+  margin: 2px 0 0;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+
 .card-preview-inner {
   /* Hosts the composed canvas (see composeCardImage.ts) — the same element
      shown here is what "Download card image" saves, so preview and saved
