@@ -2,23 +2,31 @@ import { renderGeneratorTab } from './generator';
 import { renderCardsTab } from './cards';
 import { renderHistoryTab } from './history';
 
-type TabId = 'generate' | 'cards' | 'history';
+type TabId = 'cards' | 'generate' | 'history';
 
 export function mountApp(root: HTMLElement): void {
   root.innerHTML = `
     <header class="app-header">
-      <div class="logo-mark" aria-hidden="true">▦</div>
+      <img class="logo-mark" src="./icons/icon-192.png" alt="" aria-hidden="true" />
       <div>
         <h1>QR Web App</h1>
         <p class="subtitle">Generate &amp; save QR codes, fully offline</p>
       </div>
     </header>
-    <nav class="tabs" role="tablist">
-      <button id="tab-generate" role="tab" aria-selected="true">Generate</button>
-      <button id="tab-cards" role="tab" aria-selected="false">My Cards</button>
-      <button id="tab-history" role="tab" aria-selected="false">History</button>
-    </nav>
-    <div id="tab-content"></div>
+    <div class="layout">
+      <nav class="side-tabs" role="tablist" aria-orientation="vertical">
+        <button id="tab-cards" role="tab" aria-selected="true">
+          <span class="tab-icon" aria-hidden="true">🪪</span><span class="tab-label">My Cards</span>
+        </button>
+        <button id="tab-generate" role="tab" aria-selected="false">
+          <span class="tab-icon" aria-hidden="true">▦</span><span class="tab-label">Generate</span>
+        </button>
+        <button id="tab-history" role="tab" aria-selected="false">
+          <span class="tab-icon" aria-hidden="true">🕘</span><span class="tab-label">History</span>
+        </button>
+      </nav>
+      <div id="tab-content" class="content-area"></div>
+    </div>
     <div class="version-badge" aria-hidden="true">v${__APP_VERSION__}</div>
   `;
 
@@ -45,5 +53,5 @@ export function mountApp(root: HTMLElement): void {
   tabCards.addEventListener('click', () => showTab('cards'));
   tabHistory.addEventListener('click', () => showTab('history'));
 
-  showTab('generate');
+  showTab('cards');
 }
