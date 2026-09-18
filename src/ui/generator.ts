@@ -1,5 +1,6 @@
 import { buildTextPayload, buildUrlPayload, buildWifiPayload, type WifiEncryption } from '../qr/encode';
 import { downloadCanvasAsPng, renderQrToCanvas } from '../qr/render';
+import { saveToHistory } from '../history/store';
 
 type QrType = 'url' | 'wifi' | 'text';
 
@@ -18,7 +19,11 @@ export function renderGeneratorTab(container: HTMLElement): void {
     <p class="error-text" id="generate-error" hidden></p>
     <div class="qr-output" id="qr-output" hidden>
       <canvas id="qr-canvas"></canvas>
-      <button class="secondary" id="download-btn" type="button">Download PNG</button>
+      <div class="row">
+        <button class="secondary" id="download-btn" type="button">Download PNG</button>
+        <button class="secondary" id="save-history-btn" type="button">Save to history</button>
+      </div>
+      <p class="status-text" id="save-status" hidden></p>
     </div>
   `;
 
@@ -28,6 +33,12 @@ export function renderGeneratorTab(container: HTMLElement): void {
   const outputEl = container.querySelector<HTMLDivElement>('#qr-output')!;
   const canvas = container.querySelector<HTMLCanvasElement>('#qr-canvas')!;
   const downloadBtn = container.querySelector<HTMLButtonElement>('#download-btn')!;
+  const saveHistoryBtn = container.querySelector<HTMLButtonElement>('#save-history-btn')!;
+  const saveStatusEl = container.querySelector<HTMLParagraphElement>('#save-status')!;
+
+  // Tracks the most recently generated payload so "Save to history" and
+  // "Download PNG" both act on exactly what's on screen.
+  let lastGenerated: { type: QrType; label: string; payload: string } | null = null;
 
   function renderFieldsFor(type: QrType): void {
     if (type === 'url') {
@@ -74,15 +85,18 @@ export function renderGeneratorTab(container: HTMLElement): void {
 
   async function handleGenerate(): Promise<void> {
     errorEl.hidden = true;
+    saveStatusEl.hidden = true;
     outputEl.hidden = true;
     try {
       const type = typeSelect.value as QrType;
       let payload: string;
+      let label: string;
 
       if (type === 'url') {
         const url = (typeFields.querySelector<HTMLInputElement>('#f-url')?.value ?? '').trim();
         if (!url) throw new Error('Enter a website URL.');
         payload = buildUrlPayload(url);
+        label = url;
       } else if (type === 'wifi') {
         const ssid = (typeFields.querySelector<HTMLInputElement>('#f-ssid')?.value ?? '').trim();
         if (!ssid) throw new Error('Enter a network name.');
@@ -90,15 +104,19 @@ export function renderGeneratorTab(container: HTMLElement): void {
         const encryption = (typeFields.querySelector<HTMLSelectElement>('#f-enc')?.value ?? 'WPA') as WifiEncryption;
         const hidden = typeFields.querySelector<HTMLInputElement>('#f-hidden')?.checked ?? false;
         payload = buildWifiPayload({ ssid, password, encryption, hidden });
+        label = `Wi-Fi: ${ssid}`;
       } else {
         const text = typeFields.querySelector<HTMLTextAreaElement>('#f-text')?.value ?? '';
         if (!text.trim()) throw new Error('Enter some text.');
         payload = buildTextPayload(text);
+        label = text.length > 30 ? `${text.slice(0, 30)}…` : text;
       }
 
       await renderQrToCanvas(canvas, payload);
+      lastGenerated = { type, label, payload };
       outputEl.hidden = false;
     } catch (err) {
+      lastGenerated = null;
       errorEl.textContent = err instanceof Error ? err.message : 'Could not generate QR code.';
       errorEl.hidden = false;
     }
@@ -109,4 +127,11 @@ export function renderGeneratorTab(container: HTMLElement): void {
   });
 
   downloadBtn.addEventListener('click', () => downloadCanvasAsPng(canvas, 'qrcode'));
+
+  saveHistoryBtn.addEventListener('click', () => {
+    if (!lastGenerated) return;
+    saveToHistory(lastGenerated.type, lastGenerated.label, lastGenerated.payload);
+    saveStatusEl.textContent = 'Saved to history.';
+    saveStatusEl.hidden = false;
+  });
 }

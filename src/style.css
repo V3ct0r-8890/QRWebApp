@@ -318,6 +318,22 @@ button.secondary.danger:hover {
   font-size: 0.85rem;
 }
 
+.status-text {
+  color: var(--color-primary);
+  font-size: 0.85rem;
+}
+
+.version-badge {
+  position: fixed;
+  right: max(10px, env(safe-area-inset-right));
+  bottom: max(8px, env(safe-area-inset-bottom));
+  font-size: 0.72rem;
+  color: var(--color-muted);
+  opacity: 0.7;
+  pointer-events: none;
+  z-index: 10;
+}
+
 .row {
   display: flex;
   gap: 8px;

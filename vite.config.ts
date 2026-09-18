@@ -1,11 +1,19 @@
+import { readFileSync } from 'node:fs';
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+
+const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf-8')) as { version: string };
 
 // base: './' keeps every asset reference relative, so the same build works
 // whether it's served from a domain root or a GitHub Pages subpath
 // (e.g. username.github.io/QRwebApp/) with no path edits required.
 export default defineConfig({
   base: './',
+  // Bakes the package.json version into the client bundle as a constant,
+  // read by the version badge in the bottom-right corner of the app.
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version),
+  },
   server: {
     // /mnt/g is a Windows drive mounted into WSL2 (DrvFs). Its filesystem
     // events don't reliably reach inotify, so Vite's default watcher can
