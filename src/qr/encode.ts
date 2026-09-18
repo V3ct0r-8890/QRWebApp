@@ -23,6 +23,7 @@ export interface VCardFields {
   phone?: string;
   email?: string;
   url?: string;
+  address?: string;
   note?: string;
 }
 
@@ -70,6 +71,7 @@ export function buildVCardPayload(fields: VCardFields): string {
   if (fields.phone) lines.push(`TEL;TYPE=CELL:${escapeVCardValue(fields.phone)}`);
   if (fields.email) lines.push(`EMAIL:${escapeVCardValue(fields.email)}`);
   if (fields.url) lines.push(`URL:${escapeVCardValue(fields.url)}`);
+  if (fields.address) lines.push(`ADR:;;${escapeVCardValue(fields.address)};;;;`);
   if (fields.note) lines.push(`NOTE:${escapeVCardValue(fields.note)}`);
   lines.push('END:VCARD');
   // RFC 6350 specifies CRLF line endings; most camera-app parsers tolerate

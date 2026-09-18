@@ -12,10 +12,43 @@ function loadImage(src: string): Promise<HTMLImageElement> {
 const FONT_STACK = '"Segoe UI", system-ui, -apple-system, Roboto, sans-serif';
 const BORDER_COLOR = '#e3e5eb';
 
+/** Greedy word-wrap capped at `maxLines`; overflow on the last line gets an ellipsis. */
+function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number, maxLines: number): string[] {
+  const words = text.trim().split(/\s+/).filter(Boolean);
+  const lines: string[] = [];
+  let current = '';
+
+  for (const word of words) {
+    const candidate = current ? `${current} ${word}` : word;
+    if (current && ctx.measureText(candidate).width > maxWidth) {
+      lines.push(current);
+      current = word;
+      if (lines.length === maxLines) break;
+    } else {
+      current = candidate;
+    }
+  }
+  if (lines.length < maxLines && current) {
+    lines.push(current);
+  }
+
+  const wordsUsed = lines.reduce((n, line) => n + line.split(/\s+/).length, 0);
+  if (wordsUsed < words.length && lines.length === maxLines) {
+    let last = lines[maxLines - 1];
+    while (last.length > 0 && ctx.measureText(`${last}…`).width > maxWidth) {
+      last = last.slice(0, -1).trimEnd();
+    }
+    lines[maxLines - 1] = `${last}…`;
+  }
+
+  return lines;
+}
+
 /**
  * Composes a full-width logo banner (top) + QR (left) + top-aligned labeled
- * contact text (right) into a single 3:2 canvas, matching the on-screen
- * card-preview layout, for the "Download card image" action.
+ * contact text (right) + a wrapped address line (bottom) into a single 3:2
+ * canvas, matching the on-screen card-preview layout, for the "Download
+ * card image" action.
  */
 export async function composeCardImage(card: CardProfile, qrCanvas: HTMLCanvasElement): Promise<HTMLCanvasElement> {
   // Actual rendered resolution is 1200x800 (3:2) — 2x the CSS display size
@@ -36,14 +69,12 @@ export async function composeCardImage(card: CardProfile, qrCanvas: HTMLCanvasEl
   ctx.lineWidth = 1;
   ctx.strokeRect(0.5, 0.5, width - 1, height - 1);
 
-  let bodyTop = 0;
+  // The banner area is always reserved at this height, whether or not the
+  // card has a logo — so the rest of the layout (QR, details, address)
+  // never shifts depending on whether a logo is set. Without a logo, the
+  // banner is simply left blank above the divider line.
+  const bannerHeight = 283;
   if (card.logo) {
-    // Logo area enlarged further (204 -> 236) and the gap below it widened
-    // 30% (57 -> 74), which together shift the QR/details block down.
-    // qrSize (460) is unchanged and the 1200x800 canvas is fixed, so this
-    // is the largest banner+gap that still leaves a safe bottom margin
-    // above the QR without touching the card border.
-    const bannerHeight = 283; // 20% larger
     const logoImg = await loadImage(card.logo);
     // Contain-fit within a fixed box — scaling by the tighter of the two
     // ratios keeps any source aspect ratio uniform instead of stretching it
@@ -54,16 +85,19 @@ export async function composeCardImage(card: CardProfile, qrCanvas: HTMLCanvasEl
     const logoWidth = logoImg.width * scale;
     const logoHeight = logoImg.height * scale;
     ctx.drawImage(logoImg, (width - logoWidth) / 2, (bannerHeight - logoHeight) / 2, logoWidth, logoHeight);
-    ctx.strokeStyle = BORDER_COLOR;
-    ctx.beginPath();
-    ctx.moveTo(0, bannerHeight);
-    ctx.lineTo(width, bannerHeight);
-    ctx.stroke();
-    bodyTop = bannerHeight;
   }
+  ctx.strokeStyle = BORDER_COLOR;
+  ctx.beginPath();
+  ctx.moveTo(0, bannerHeight);
+  ctx.lineTo(width, bannerHeight);
+  ctx.stroke();
+  const bodyTop = bannerHeight;
 
-  const bodyPadding = 60; // tightened alongside sidePadding
-  const qrSize = 414; // 10% smaller
+  // bodyPadding and qrSize both trimmed slightly from the previous round to
+  // make room for the new address block at the bottom, within the fixed
+  // 1200x800 frame.
+  const bodyPadding = 40;
+  const qrSize = 380;
   const qrX = sidePadding;
   const qrY = bodyTop + bodyPadding;
   ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
@@ -93,6 +127,19 @@ export async function composeCardImage(card: CardProfile, qrCanvas: HTMLCanvasEl
     ctx.fillText(` ${field.value}`, textX + labelWidth, textY);
 
     textY += lineHeight;
+  }
+
+  if (card.address) {
+    const addressMaxWidth = width - sidePadding * 2;
+    const addressLineHeight = 32;
+    ctx.font = `400 26px ${FONT_STACK}`;
+    ctx.fillStyle = '#6b7280';
+    const lines = wrapText(ctx, card.address, addressMaxWidth, 2);
+    let addressY = qrY + qrSize + 18 + 24; // gap below the QR row, then first-line baseline
+    for (const line of lines) {
+      ctx.fillText(line, sidePadding, addressY);
+      addressY += addressLineHeight;
+    }
   }
 
   return canvas;

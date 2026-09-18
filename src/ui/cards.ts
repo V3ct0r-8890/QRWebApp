@@ -231,6 +231,7 @@ export function renderCardsTab(container: HTMLElement): void {
       <div class="field"><label for="c-phone">Phone</label><input id="c-phone" type="tel" /></div>
       <div class="field"><label for="c-email">Email</label><input id="c-email" type="email" /></div>
       <div class="field"><label for="c-url">Website</label><input id="c-url" type="text" /></div>
+      <div class="field"><label for="c-address">Address</label><textarea id="c-address" rows="2"></textarea></div>
       <div class="field"><label for="c-note">Note</label><textarea id="c-note" rows="2"></textarea></div>
       <div class="row">
         <button class="primary" id="c-save" type="button">Save</button>
@@ -283,6 +284,7 @@ export function renderCardsTab(container: HTMLElement): void {
       phone: slot.querySelector('#c-phone')!,
       email: slot.querySelector('#c-email')!,
       url: slot.querySelector('#c-url')!,
+      address: slot.querySelector('#c-address')!,
       note: slot.querySelector('#c-note')!,
     };
     const errorEl = slot.querySelector<HTMLParagraphElement>('#c-error')!;
@@ -294,6 +296,7 @@ export function renderCardsTab(container: HTMLElement): void {
       fields.phone.value = existing.phone ?? '';
       fields.email.value = existing.email ?? '';
       fields.url.value = existing.url ?? '';
+      fields.address.value = existing.address ?? '';
       fields.note.value = existing.note ?? '';
     }
 
@@ -314,6 +317,7 @@ export function renderCardsTab(container: HTMLElement): void {
         phone: fields.phone.value.trim() || undefined,
         email: fields.email.value.trim() || undefined,
         url: fields.url.value.trim() || undefined,
+        address: fields.address.value.trim() || undefined,
         note: fields.note.value.trim() || undefined,
         logo: logoDataUrl,
       };
