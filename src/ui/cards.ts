@@ -63,24 +63,13 @@ export function renderCardsTab(container: HTMLElement): void {
   }
 
   function showViewer(id: string): void {
-    const card = listCards().find((c) => c.id === id);
-    if (!card) return;
+    const found = listCards().find((c) => c.id === id);
+    if (!found) return;
+    const card: CardProfile = found;
     const slot = container.querySelector<HTMLDivElement>('#editor-slot')!;
     slot.innerHTML = `
       <div class="qr-output">
-        <div class="card-preview-inner">
-          ${card.logo ? `<div class="card-logo-banner"><img class="card-logo" src="${card.logo}" alt="" /></div>` : ''}
-          <div class="card-body">
-            <canvas id="card-canvas"></canvas>
-            <div class="card-info">
-              <p class="card-name"><span class="card-field-label">Name:</span> ${escapeHtml(card.fullName)}</p>
-              ${card.title ? `<p><span class="card-field-label">Title:</span> ${escapeHtml(card.title)}</p>` : ''}
-              ${card.org ? `<p><span class="card-field-label">Company:</span> ${escapeHtml(card.org)}</p>` : ''}
-              ${card.email ? `<p><span class="card-field-label">Email:</span> ${escapeHtml(card.email)}</p>` : ''}
-              ${card.phone ? `<p><span class="card-field-label">Mobile:</span> ${escapeHtml(card.phone)}</p>` : ''}
-            </div>
-          </div>
-        </div>
+        <div class="card-preview-inner" id="card-preview-host"></div>
         <div class="row">
           <button class="secondary" id="card-download-qr" type="button">Download QR</button>
           <button class="secondary" id="card-download-card" type="button">Download card image</button>
@@ -89,20 +78,37 @@ export function renderCardsTab(container: HTMLElement): void {
         <p class="error-text" id="card-compose-error" hidden></p>
       </div>
     `;
-    const canvas = slot.querySelector<HTMLCanvasElement>('#card-canvas')!;
+    const host = slot.querySelector<HTMLDivElement>('#card-preview-host')!;
     const composeErrorEl = slot.querySelector<HTMLParagraphElement>('#card-compose-error')!;
-    void renderQrToCanvas(canvas, buildVCardPayload(card));
+
+    // The raw QR lives on a detached canvas (never inserted into the DOM) —
+    // it only feeds composeCardImage() and the "Download QR" button.
+    const qrCanvas = document.createElement('canvas');
+    let composedCanvas: HTMLCanvasElement | null = null;
+
+    async function render(): Promise<void> {
+      await renderQrToCanvas(qrCanvas, buildVCardPayload(card));
+      // The on-screen preview renders the SAME composed canvas that gets
+      // downloaded, so the two can never drift apart — what you see here is
+      // pixel-for-pixel what "Download card image" saves.
+      composedCanvas = await composeCardImage(card, qrCanvas);
+      composedCanvas.className = 'card-canvas-preview';
+      host.innerHTML = '';
+      host.appendChild(composedCanvas);
+    }
+    void render().catch((err) => {
+      composeErrorEl.textContent = err instanceof Error ? err.message : 'Could not render the card preview.';
+      composeErrorEl.hidden = false;
+    });
+
     slot.querySelector<HTMLButtonElement>('#card-download-qr')!.addEventListener('click', () => {
-      downloadCanvasAsPng(canvas, `${card.label || 'card'}-qr`);
+      downloadCanvasAsPng(qrCanvas, `${card.label || 'card'}-qr`);
     });
     slot.querySelector<HTMLButtonElement>('#card-download-card')!.addEventListener('click', () => {
       composeErrorEl.hidden = true;
-      composeCardImage(card, canvas)
-        .then((composed) => downloadCanvasAsPng(composed, `${card.label || 'card'}`))
-        .catch((err) => {
-          composeErrorEl.textContent = err instanceof Error ? err.message : 'Could not compose the card image.';
-          composeErrorEl.hidden = false;
-        });
+      if (composedCanvas) {
+        downloadCanvasAsPng(composedCanvas, `${card.label || 'card'}`);
+      }
     });
     slot.querySelector<HTMLButtonElement>('#card-edit')!.addEventListener('click', () => {
       editingId = id;

@@ -355,85 +355,25 @@ button.secondary.danger:hover {
 }
 
 .card-preview-inner {
-  display: flex;
-  flex-direction: column;
+  /* Hosts the composed canvas (see composeCardImage.ts) — the same element
+     shown here is what "Download card image" saves, so preview and saved
+     file can never drift apart. */
   width: 100%;
   max-width: 480px;
-  aspect-ratio: 3 / 2;
   margin: 0 auto;
   box-sizing: border-box;
-  overflow: hidden;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
   border-radius: var(--radius);
   box-shadow: var(--shadow-md);
-  font-family: 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
-}
-
-.card-logo-banner {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 64px;
-  padding: 0 18px;
-  border-bottom: 1px solid var(--color-border);
   overflow: hidden;
+  line-height: 0;
 }
 
-.card-logo {
-  /* Fixed box + object-fit:contain guarantees no stretching regardless of
-     the source image's aspect ratio — a height-only box with max-width can
-     force non-uniform scaling once max-width clamps it. */
-  width: 160px;
-  max-width: 100%;
-  height: 44px;
-  object-fit: contain;
-  object-position: center;
-}
-
-.card-body {
-  display: flex;
-  align-items: flex-start;
-  gap: 18px;
-  flex: 1 1 auto;
-  min-height: 0;
-  padding: 16px 18px;
-}
-
-.card-body canvas {
-  width: 190px;
-  height: 190px;
-  aspect-ratio: 1 / 1;
-  flex: none;
-  border-radius: var(--radius);
-}
-
-.card-info {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  min-width: 0;
-  text-align: left;
-  padding-top: 4px;
-}
-
-.card-info .card-name {
-  font-weight: 700;
-  font-size: 1.15rem;
-  margin: 0;
-}
-
-.card-info p {
-  margin: 0;
-  font-size: 0.98rem;
-  color: var(--color-fg);
-  overflow-wrap: anywhere;
-}
-
-.card-info p .card-field-label {
-  font-weight: 600;
-  color: var(--color-muted);
+.card-canvas-preview {
+  display: block;
+  width: 100%;
+  height: auto;
+  /* Intrinsic canvas pixel size is 3:2 (set in composeCardImage.ts); CSS
+     just scales it down responsively without ever changing that ratio. */
 }
 
 .logo-upload-row {
