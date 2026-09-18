@@ -1,10 +1,13 @@
 import { renderGeneratorTab } from './generator';
 import { renderCardsTab } from './cards';
 import { renderHistoryTab } from './history';
+import { detectPlatform } from '../platform';
 
 type TabId = 'cards' | 'generate' | 'history';
 
 export function mountApp(root: HTMLElement): void {
+  document.documentElement.dataset.platform = detectPlatform();
+
   root.innerHTML = `
     <header class="app-header">
       <img class="logo-mark" src="./icons/icon-192.png" alt="" aria-hidden="true" />

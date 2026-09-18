@@ -177,22 +177,50 @@ h1 {
   min-width: 0;
 }
 
-@media (min-width: 640px) {
-  .side-tabs {
-    width: 168px;
-  }
+/* Desktop OS: left rail, icon + label side by side. */
+:root[data-platform='desktop'] .side-tabs {
+  width: 168px;
+}
 
-  .side-tabs button {
-    flex-direction: row;
-    justify-content: flex-start;
-    gap: 10px;
-    padding: 8px 12px;
-    font-size: 0.92rem;
-  }
+:root[data-platform='desktop'] .side-tabs button {
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 8px 12px;
+  font-size: 0.92rem;
+}
 
-  .side-tabs .tab-icon {
-    font-size: 1.05rem;
-  }
+:root[data-platform='desktop'] .side-tabs .tab-icon {
+  font-size: 1.05rem;
+}
+
+/* Mobile OS: bottom tab bar, fixed to the viewport, safe-area aware. */
+:root[data-platform='mobile'] .side-tabs {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: auto;
+  flex-direction: row;
+  justify-content: space-around;
+  border-radius: 0;
+  padding: 6px max(6px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left));
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  box-shadow: 0 -2px 8px rgba(16, 24, 40, 0.08);
+  z-index: 20;
+}
+
+:root[data-platform='mobile'] .side-tabs button {
+  flex: 1;
+}
+
+:root[data-platform='mobile'] .content-area {
+  padding-bottom: 68px;
+}
+
+:root[data-platform='mobile'] .version-badge {
+  bottom: calc(64px + max(8px, env(safe-area-inset-bottom)));
 }
 
 .side-tabs button:focus-visible,
@@ -324,6 +352,71 @@ button.secondary.danger:hover {
   aspect-ratio: 1 / 1;
   height: auto;
   border-radius: var(--radius-sm);
+}
+
+.card-preview-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.card-logo {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+}
+
+.card-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  width: 100%;
+}
+
+.card-body canvas {
+  width: 120px;
+  height: 120px;
+  aspect-ratio: 1 / 1;
+  flex: none;
+  border-radius: var(--radius-sm);
+}
+
+.card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  text-align: left;
+}
+
+.card-info .card-name {
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin: 0;
+}
+
+.card-info p {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--color-muted);
+  overflow-wrap: anywhere;
+}
+
+.logo-upload-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-upload-row img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
 }
 
 .card-list {

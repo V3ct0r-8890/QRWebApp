@@ -9,6 +9,8 @@ import {
   saveCard,
   type CardProfile,
 } from '../cards/store';
+import { resizeImageToDataUrl } from '../util/image';
+import { composeCardImage } from '../cards/composeCardImage';
 
 export function renderCardsTab(container: HTMLElement): void {
   let editingId: string | null = null;
@@ -66,15 +68,41 @@ export function renderCardsTab(container: HTMLElement): void {
     const slot = container.querySelector<HTMLDivElement>('#editor-slot')!;
     slot.innerHTML = `
       <div class="qr-output">
-        <canvas id="card-canvas"></canvas>
-        <button class="secondary" id="card-download" type="button">Download PNG</button>
+        <div class="card-preview-inner">
+          ${card.logo ? `<img class="card-logo" src="${card.logo}" alt="" />` : ''}
+          <div class="card-body">
+            <canvas id="card-canvas"></canvas>
+            <div class="card-info">
+              <p class="card-name">${escapeHtml(card.fullName)}</p>
+              ${card.title ? `<p>${escapeHtml(card.title)}</p>` : ''}
+              ${card.org ? `<p>${escapeHtml(card.org)}</p>` : ''}
+              ${card.email ? `<p>${escapeHtml(card.email)}</p>` : ''}
+              ${card.phone ? `<p>${escapeHtml(card.phone)}</p>` : ''}
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <button class="secondary" id="card-download-qr" type="button">Download QR</button>
+          <button class="secondary" id="card-download-card" type="button">Download card image</button>
+        </div>
         <button class="secondary" id="card-edit" type="button">Edit</button>
+        <p class="error-text" id="card-compose-error" hidden></p>
       </div>
     `;
     const canvas = slot.querySelector<HTMLCanvasElement>('#card-canvas')!;
+    const composeErrorEl = slot.querySelector<HTMLParagraphElement>('#card-compose-error')!;
     void renderQrToCanvas(canvas, buildVCardPayload(card));
-    slot.querySelector<HTMLButtonElement>('#card-download')!.addEventListener('click', () => {
-      downloadCanvasAsPng(canvas, `${card.label || 'card'}`);
+    slot.querySelector<HTMLButtonElement>('#card-download-qr')!.addEventListener('click', () => {
+      downloadCanvasAsPng(canvas, `${card.label || 'card'}-qr`);
+    });
+    slot.querySelector<HTMLButtonElement>('#card-download-card')!.addEventListener('click', () => {
+      composeErrorEl.hidden = true;
+      composeCardImage(card, canvas)
+        .then((composed) => downloadCanvasAsPng(composed, `${card.label || 'card'}`))
+        .catch((err) => {
+          composeErrorEl.textContent = err instanceof Error ? err.message : 'Could not compose the card image.';
+          composeErrorEl.hidden = false;
+        });
     });
     slot.querySelector<HTMLButtonElement>('#card-edit')!.addEventListener('click', () => {
       editingId = id;
@@ -85,6 +113,14 @@ export function renderCardsTab(container: HTMLElement): void {
   function showEditor(existing: CardProfile | null): void {
     const slot = container.querySelector<HTMLDivElement>('#editor-slot')!;
     slot.innerHTML = `
+      <div class="field">
+        <label for="c-logo">Logo</label>
+        <div class="logo-upload-row">
+          <img id="c-logo-preview" alt="" hidden />
+          <input id="c-logo" type="file" accept="image/*" style="width:auto;min-height:auto;" />
+          <button class="secondary" id="c-logo-remove" type="button" hidden>Remove</button>
+        </div>
+      </div>
       <div class="field"><label for="c-label">Slot label</label><input id="c-label" /></div>
       <div class="field"><label for="c-name">Full name *</label><input id="c-name" /></div>
       <div class="field"><label for="c-org">Organization</label><input id="c-org" /></div>
@@ -100,6 +136,42 @@ export function renderCardsTab(container: HTMLElement): void {
       <p class="error-text" id="c-error" hidden></p>
     `;
 
+    let logoDataUrl: string | undefined = existing?.logo;
+    const logoInput = slot.querySelector<HTMLInputElement>('#c-logo')!;
+    const logoPreview = slot.querySelector<HTMLImageElement>('#c-logo-preview')!;
+    const logoRemoveBtn = slot.querySelector<HTMLButtonElement>('#c-logo-remove')!;
+
+    function refreshLogoPreview(): void {
+      if (logoDataUrl) {
+        logoPreview.src = logoDataUrl;
+        logoPreview.hidden = false;
+        logoRemoveBtn.hidden = false;
+      } else {
+        logoPreview.hidden = true;
+        logoRemoveBtn.hidden = true;
+      }
+    }
+    refreshLogoPreview();
+
+    logoInput.addEventListener('change', () => {
+      const file = logoInput.files?.[0];
+      if (!file) return;
+      resizeImageToDataUrl(file, 160)
+        .then((dataUrl) => {
+          logoDataUrl = dataUrl;
+          refreshLogoPreview();
+        })
+        .catch((err) => {
+          errorEl.textContent = err instanceof Error ? err.message : 'Could not process the image.';
+          errorEl.hidden = false;
+        });
+    });
+    logoRemoveBtn.addEventListener('click', () => {
+      logoDataUrl = undefined;
+      logoInput.value = '';
+      refreshLogoPreview();
+    });
+
     const fields: Record<string, HTMLInputElement | HTMLTextAreaElement> = {
       label: slot.querySelector('#c-label')!,
       fullName: slot.querySelector('#c-name')!,
@@ -110,6 +182,7 @@ export function renderCardsTab(container: HTMLElement): void {
       url: slot.querySelector('#c-url')!,
       note: slot.querySelector('#c-note')!,
     };
+    const errorEl = slot.querySelector<HTMLParagraphElement>('#c-error')!;
     if (existing) {
       fields.label.value = existing.label;
       fields.fullName.value = existing.fullName;
@@ -120,8 +193,6 @@ export function renderCardsTab(container: HTMLElement): void {
       fields.url.value = existing.url ?? '';
       fields.note.value = existing.note ?? '';
     }
-
-    const errorEl = slot.querySelector<HTMLParagraphElement>('#c-error')!;
 
     slot.querySelector<HTMLButtonElement>('#c-save')!.addEventListener('click', () => {
       errorEl.hidden = true;
@@ -141,6 +212,7 @@ export function renderCardsTab(container: HTMLElement): void {
         email: fields.email.value.trim() || undefined,
         url: fields.url.value.trim() || undefined,
         note: fields.note.value.trim() || undefined,
+        logo: logoDataUrl,
       };
       try {
         saveCard(card);

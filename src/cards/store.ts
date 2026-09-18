@@ -4,6 +4,8 @@ export interface CardProfile extends VCardFields {
   id: string;
   /** User-facing label for the slot, e.g. "Work", "Personal", "Meetup badge". */
   label: string;
+  /** Optional logo as a data URL, resized client-side before storage. */
+  logo?: string;
 }
 
 export const MAX_CARDS = 10;
