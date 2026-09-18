@@ -78,6 +78,7 @@ body {
    a full-bleed mobile screen, while staying comfortably narrow to read. */
 @media (min-width: 640px) {
   #app {
+    max-width: 760px;
     margin: 40px auto;
     min-height: auto;
     background: var(--color-surface);
@@ -318,7 +319,9 @@ button.secondary.danger:hover {
 }
 
 .qr-output canvas {
-  max-width: 100%;
+  display: block;
+  width: min(100%, 320px);
+  aspect-ratio: 1 / 1;
   height: auto;
   border-radius: var(--radius-sm);
 }
