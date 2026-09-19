@@ -1,11 +1,18 @@
 import type { VCardFields } from '../qr/encode';
 
+export type LogoAlign = 'left' | 'center' | 'right';
+export type CardTheme = 'light' | 'dark' | 'blue' | 'pink';
+
 export interface CardProfile extends VCardFields {
   id: string;
   /** User-facing label for the slot, e.g. "Work", "Personal", "Meetup badge". */
   label: string;
   /** Optional logo as a data URL, resized client-side before storage. */
   logo?: string;
+  /** Horizontal placement of the logo within the banner. Defaults to 'center'. */
+  logoAlign?: LogoAlign;
+  /** Card color theme. Defaults to 'light' (today's look). */
+  theme?: CardTheme;
 }
 
 export const MAX_CARDS = 10;

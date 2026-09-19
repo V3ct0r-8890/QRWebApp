@@ -1,4 +1,18 @@
-import type { CardProfile } from './store';
+import type { CardProfile, CardTheme } from './store';
+
+interface Palette {
+  background: string;
+  border: string;
+  labelColor: string;
+  valueColor: string;
+}
+
+const THEMES: Record<CardTheme, Palette> = {
+  light: { background: '#ffffff', border: '#e3e5eb', labelColor: '#6b7280', valueColor: '#16181d' },
+  dark: { background: '#1c1e24', border: '#33363f', labelColor: '#9aa0ae', valueColor: '#f2f3f5' },
+  blue: { background: '#eaf2fb', border: '#c7dcf3', labelColor: '#3b6ea5', valueColor: '#1c3a57' },
+  pink: { background: '#fbeaf0', border: '#f3c7d7', labelColor: '#a5476b', valueColor: '#571c33' },
+};
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -10,7 +24,6 @@ function loadImage(src: string): Promise<HTMLImageElement> {
 }
 
 const FONT_STACK = '"Segoe UI", system-ui, -apple-system, Roboto, sans-serif';
-const BORDER_COLOR = '#e3e5eb';
 
 /** Greedy word-wrap capped at `maxLines`; overflow on the last line gets an ellipsis. */
 function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number, maxLines: number): string[] {
@@ -63,9 +76,12 @@ export async function composeCardImage(card: CardProfile, qrCanvas: HTMLCanvasEl
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Canvas rendering is not available.');
 
-  ctx.fillStyle = '#ffffff';
+  const palette = THEMES[card.theme ?? 'light'];
+  const logoAlign = card.logoAlign ?? 'center';
+
+  ctx.fillStyle = palette.background;
   ctx.fillRect(0, 0, width, height);
-  ctx.strokeStyle = BORDER_COLOR;
+  ctx.strokeStyle = palette.border;
   ctx.lineWidth = 1;
   ctx.strokeRect(0.5, 0.5, width - 1, height - 1);
 
@@ -84,9 +100,16 @@ export async function composeCardImage(card: CardProfile, qrCanvas: HTMLCanvasEl
     const scale = Math.min(boxW / logoImg.width, boxH / logoImg.height);
     const logoWidth = logoImg.width * scale;
     const logoHeight = logoImg.height * scale;
-    ctx.drawImage(logoImg, (width - logoWidth) / 2, (bannerHeight - logoHeight) / 2, logoWidth, logoHeight);
+    const logoY = (bannerHeight - logoHeight) / 2;
+    const logoX =
+      logoAlign === 'left'
+        ? sidePadding
+        : logoAlign === 'right'
+          ? width - sidePadding - logoWidth
+          : (width - logoWidth) / 2;
+    ctx.drawImage(logoImg, logoX, logoY, logoWidth, logoHeight);
   }
-  ctx.strokeStyle = BORDER_COLOR;
+  ctx.strokeStyle = palette.border;
   ctx.beginPath();
   ctx.moveTo(0, bannerHeight);
   ctx.lineTo(width, bannerHeight);
@@ -100,6 +123,12 @@ export async function composeCardImage(card: CardProfile, qrCanvas: HTMLCanvasEl
   const qrSize = 380;
   const qrX = sidePadding;
   const qrY = bodyTop + bodyPadding;
+  // The QR itself always stays plain black-on-white for scan reliability —
+  // a white backing chip (with its own quiet-zone margin) keeps it readable
+  // against dark/pastel theme backgrounds instead of tinting its modules.
+  const qrChipMargin = 14;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(qrX - qrChipMargin, qrY - qrChipMargin, qrSize + qrChipMargin * 2, qrSize + qrChipMargin * 2);
   ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
 
   type Field = { label: string; value?: string };
@@ -118,12 +147,12 @@ export async function composeCardImage(card: CardProfile, qrCanvas: HTMLCanvasEl
   ctx.textBaseline = 'alphabetic';
   for (const field of fields) {
     ctx.font = `600 28px ${FONT_STACK}`;
-    ctx.fillStyle = '#6b7280';
+    ctx.fillStyle = palette.labelColor;
     ctx.fillText(field.label, textX, textY);
     const labelWidth = ctx.measureText(field.label).width;
 
     ctx.font = field.label === 'Name:' ? `700 40px ${FONT_STACK}` : `400 32px ${FONT_STACK}`;
-    ctx.fillStyle = '#16181d';
+    ctx.fillStyle = palette.valueColor;
     ctx.fillText(` ${field.value}`, textX + labelWidth, textY);
 
     textY += lineHeight;
@@ -145,11 +174,11 @@ export async function composeCardImage(card: CardProfile, qrCanvas: HTMLCanvasEl
     let addressY = qrY + qrSize + 18 + 24; // gap below the QR row, then first-line baseline
 
     ctx.font = `600 26px ${FONT_STACK}`;
-    ctx.fillStyle = '#6b7280';
+    ctx.fillStyle = palette.labelColor;
     ctx.fillText(addressLabel, sidePadding, addressY);
 
     ctx.font = `400 26px ${FONT_STACK}`;
-    ctx.fillStyle = '#16181d';
+    ctx.fillStyle = palette.valueColor;
     for (const line of lines) {
       ctx.fillText(line, sidePadding + labelWidth + labelGap, addressY);
       addressY += addressLineHeight;

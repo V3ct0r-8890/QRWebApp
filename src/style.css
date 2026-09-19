@@ -437,6 +437,34 @@ button.secondary.danger:hover {
   border: 1px solid var(--color-border);
 }
 
+.segmented-control {
+  display: flex;
+  margin-top: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  width: fit-content;
+}
+
+.segmented-option {
+  min-height: 32px;
+  padding: 6px 14px;
+  border: none;
+  border-right: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-fg);
+  cursor: pointer;
+}
+
+.segmented-option:last-child {
+  border-right: none;
+}
+
+.segmented-option.active {
+  background: var(--color-primary);
+  color: var(--color-primary-fg);
+}
+
 .carousel-caption {
   margin: 0 0 2px;
   text-align: center;

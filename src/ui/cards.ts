@@ -8,6 +8,8 @@ import {
   listCards,
   saveCard,
   type CardProfile,
+  type CardTheme,
+  type LogoAlign,
 } from '../cards/store';
 import { resizeImageToDataUrl } from '../util/image';
 import { composeCardImage } from '../cards/composeCardImage';
@@ -115,6 +117,20 @@ export function renderCardsTab(container: HTMLElement): void {
           <input id="c-logo" type="file" accept="image/*" style="width:auto;min-height:auto;" />
           <button class="secondary" id="c-logo-remove" type="button" hidden>Remove</button>
         </div>
+        <div class="segmented-control" id="c-logo-align" role="radiogroup" aria-label="Logo alignment">
+          <button class="segmented-option" type="button" data-value="left">Left</button>
+          <button class="segmented-option" type="button" data-value="center">Center</button>
+          <button class="segmented-option" type="button" data-value="right">Right</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="c-theme">Card color theme</label>
+        <select id="c-theme">
+          <option value="light">Light</option>
+          <option value="dark">Dark</option>
+          <option value="blue">Blue (pastel)</option>
+          <option value="pink">Pink (pastel)</option>
+        </select>
       </div>
       <div class="field"><label for="c-label">Slot label</label><input id="c-label" /></div>
       <div class="field"><label for="c-name">Full name *</label><input id="c-name" /></div>
@@ -168,6 +184,25 @@ export function renderCardsTab(container: HTMLElement): void {
       refreshLogoPreview();
     });
 
+    let logoAlign: LogoAlign = existing?.logoAlign ?? 'center';
+    const logoAlignGroup = slot.querySelector<HTMLDivElement>('#c-logo-align')!;
+    const logoAlignButtons = Array.from(logoAlignGroup.querySelectorAll<HTMLButtonElement>('.segmented-option'));
+    function refreshLogoAlign(): void {
+      for (const btn of logoAlignButtons) {
+        btn.classList.toggle('active', btn.dataset.value === logoAlign);
+      }
+    }
+    for (const btn of logoAlignButtons) {
+      btn.addEventListener('click', () => {
+        logoAlign = btn.dataset.value as LogoAlign;
+        refreshLogoAlign();
+      });
+    }
+    refreshLogoAlign();
+
+    const themeSelect = slot.querySelector<HTMLSelectElement>('#c-theme')!;
+    themeSelect.value = existing?.theme ?? 'light';
+
     const fields: Record<string, HTMLInputElement | HTMLTextAreaElement> = {
       label: slot.querySelector('#c-label')!,
       fullName: slot.querySelector('#c-name')!,
@@ -212,6 +247,8 @@ export function renderCardsTab(container: HTMLElement): void {
         address: fields.address.value.trim() || undefined,
         note: fields.note.value.trim() || undefined,
         logo: logoDataUrl,
+        logoAlign,
+        theme: themeSelect.value as CardTheme,
       };
       try {
         saveCard(card);
