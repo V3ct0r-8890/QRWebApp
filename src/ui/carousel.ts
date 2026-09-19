@@ -7,6 +7,8 @@
 
 export interface CarouselButton<T> {
   label: string;
+  /** Shown in place of the label on narrow screens (icon-only, via CSS) — label is always kept as the accessible name/tooltip. */
+  icon?: string;
   className?: string; // defaults to 'secondary'
   onClick: (item: T, index: number) => void;
 }
@@ -66,7 +68,19 @@ export function renderCarousel<T extends { id: string }>(host: HTMLElement, opti
     const el = document.createElement('button');
     el.className = btn.className ?? 'secondary';
     el.type = 'button';
-    el.textContent = btn.label;
+    el.title = btn.label;
+    el.setAttribute('aria-label', btn.label);
+    if (btn.icon) {
+      const iconSpan = document.createElement('span');
+      iconSpan.className = 'btn-icon';
+      iconSpan.setAttribute('aria-hidden', 'true');
+      iconSpan.textContent = btn.icon;
+      el.appendChild(iconSpan);
+    }
+    const labelSpan = document.createElement('span');
+    labelSpan.className = 'btn-label';
+    labelSpan.textContent = btn.label;
+    el.appendChild(labelSpan);
     el.addEventListener('click', () => btn.onClick(items[index], index));
     toolbarEl.appendChild(el);
   }

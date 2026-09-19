@@ -34,6 +34,7 @@ export function renderHistoryTab(container: HTMLElement): void {
       buttons: [
         {
           label: 'Download PNG',
+          icon: '⬇️',
           onClick: (entry) => {
             const canvas = document.createElement('canvas');
             void renderQrToCanvas(canvas, entry.payload).then(() => {
@@ -43,6 +44,7 @@ export function renderHistoryTab(container: HTMLElement): void {
         },
         {
           label: 'View image',
+          icon: '👁️',
           className: 'secondary',
           onClick: (entry) => {
             const canvas = document.createElement('canvas');
@@ -53,6 +55,7 @@ export function renderHistoryTab(container: HTMLElement): void {
         },
         {
           label: 'Delete',
+          icon: '🗑️',
           className: 'secondary danger',
           onClick: (entry) => {
             deleteHistoryEntry(entry.id);

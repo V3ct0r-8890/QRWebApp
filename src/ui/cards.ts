@@ -60,6 +60,7 @@ export function renderCardsTab(container: HTMLElement): void {
       buttons: [
         {
           label: 'Download QR',
+          icon: '⬇️',
           onClick: (card) => {
             void getQrCanvas(card).then((qrCanvas) => {
               void saveCanvasImage(qrCanvas, `${card.label || 'card'}-qr`, `${card.label || 'card'} QR code`);
@@ -68,6 +69,7 @@ export function renderCardsTab(container: HTMLElement): void {
         },
         {
           label: 'Download card image',
+          icon: '🖼️',
           onClick: (card) => {
             void getQrCanvas(card)
               .then((qrCanvas) => composeCardImage(card, qrCanvas))
@@ -76,6 +78,7 @@ export function renderCardsTab(container: HTMLElement): void {
         },
         {
           label: 'View image',
+          icon: '👁️',
           className: 'secondary',
           onClick: (card) => {
             void getQrCanvas(card)
@@ -85,6 +88,7 @@ export function renderCardsTab(container: HTMLElement): void {
         },
         {
           label: 'Edit',
+          icon: '✏️',
           onClick: (card) => {
             editingId = card.id;
             showEditor(card);
@@ -92,6 +96,7 @@ export function renderCardsTab(container: HTMLElement): void {
         },
         {
           label: 'Delete',
+          icon: '🗑️',
           className: 'secondary danger',
           onClick: (card) => {
             deleteCard(card.id);
