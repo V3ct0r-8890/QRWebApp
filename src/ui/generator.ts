@@ -1,6 +1,7 @@
 import { buildTextPayload, buildUrlPayload, buildWifiPayload, type WifiEncryption } from '../qr/encode';
 import { renderQrToCanvas, saveCanvasImage } from '../qr/render';
 import { saveToHistory } from '../history/store';
+import { showImageOverlay } from './imageViewer';
 
 type QrType = 'url' | 'wifi' | 'text';
 
@@ -19,9 +20,16 @@ export function renderGeneratorTab(container: HTMLElement): void {
     <p class="error-text" id="generate-error" hidden></p>
     <div class="qr-output" id="qr-output" hidden>
       <canvas id="qr-canvas"></canvas>
-      <div class="row">
-        <button class="secondary" id="download-btn" type="button">Download PNG</button>
-        <button class="secondary" id="save-history-btn" type="button">Save to history</button>
+      <div class="row" id="qr-output-toolbar">
+        <button class="secondary" id="download-btn" type="button" title="Download PNG" aria-label="Download PNG">
+          <span class="btn-icon" aria-hidden="true">⬇️</span><span class="btn-label">Download PNG</span>
+        </button>
+        <button class="secondary" id="view-image-btn" type="button" title="View image" aria-label="View image">
+          <span class="btn-icon" aria-hidden="true">👁️</span><span class="btn-label">View image</span>
+        </button>
+        <button class="secondary" id="save-history-btn" type="button" title="Save to history" aria-label="Save to history">
+          <span class="btn-icon" aria-hidden="true">💾</span><span class="btn-label">Save to history</span>
+        </button>
       </div>
       <p class="status-text" id="save-status" hidden></p>
     </div>
@@ -33,6 +41,7 @@ export function renderGeneratorTab(container: HTMLElement): void {
   const outputEl = container.querySelector<HTMLDivElement>('#qr-output')!;
   const canvas = container.querySelector<HTMLCanvasElement>('#qr-canvas')!;
   const downloadBtn = container.querySelector<HTMLButtonElement>('#download-btn')!;
+  const viewImageBtn = container.querySelector<HTMLButtonElement>('#view-image-btn')!;
   const saveHistoryBtn = container.querySelector<HTMLButtonElement>('#save-history-btn')!;
   const saveStatusEl = container.querySelector<HTMLParagraphElement>('#save-status')!;
 
@@ -126,7 +135,8 @@ export function renderGeneratorTab(container: HTMLElement): void {
     void handleGenerate();
   });
 
-  downloadBtn.addEventListener('click', () => void saveCanvasImage(canvas, 'qrcode', 'QR code'));
+  downloadBtn.addEventListener('click', () => void saveCanvasImage(canvas, 'qrcode', lastGenerated?.label || 'QR code'));
+  viewImageBtn.addEventListener('click', () => showImageOverlay(canvas, lastGenerated?.label || 'QR code'));
 
   saveHistoryBtn.addEventListener('click', () => {
     if (!lastGenerated) return;

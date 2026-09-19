@@ -606,34 +606,40 @@ button.secondary.danger:hover {
   flex: 1;
 }
 
-/* The carousel toolbar can hold several buttons at once (Download QR,
-   Download card image, View image, Edit, Delete) — on narrow screens their
-   labels together are wider than the viewport, so default to icon-only
-   there (label kept as the button's accessible name/tooltip) and bring the
-   label back once there's room, at the same breakpoint the rest of the
-   layout switches to its wider desktop treatment. */
-#carousel-toolbar {
+/* Toolbars that can hold several buttons at once (the carousel's Download
+   QR / Download card image / View image / Edit / Delete, and the QR
+   generator's Download PNG / View image / Save to history) — on narrow
+   screens their labels together are wider than the viewport, so default to
+   icon-only there (label kept as the button's accessible name/tooltip) and
+   bring the label back once there's room, at the same breakpoint the rest
+   of the layout switches to its wider desktop treatment. */
+#carousel-toolbar,
+#qr-output-toolbar {
   flex-wrap: wrap;
 }
 
-#carousel-toolbar button {
+#carousel-toolbar button,
+#qr-output-toolbar button {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
 }
 
-#carousel-toolbar .btn-icon {
+#carousel-toolbar .btn-icon,
+#qr-output-toolbar .btn-icon {
   font-size: 1.05rem;
   line-height: 1;
 }
 
-#carousel-toolbar .btn-label {
+#carousel-toolbar .btn-label,
+#qr-output-toolbar .btn-label {
   display: none;
 }
 
 @media (min-width: 640px) {
-  #carousel-toolbar .btn-label {
+  #carousel-toolbar .btn-label,
+  #qr-output-toolbar .btn-label {
     display: inline;
   }
 }
