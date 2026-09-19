@@ -7,9 +7,31 @@ interface Palette {
   valueColor: string;
 }
 
+function hexToRgb(hex: string): [number, number, number] {
+  const clean = hex.replace('#', '');
+  return [parseInt(clean.slice(0, 2), 16), parseInt(clean.slice(2, 4), 16), parseInt(clean.slice(4, 6), 16)];
+}
+
+/** WCAG relative luminance — used to derive text colors that stay legible against an arbitrary background. */
+function relativeLuminance(hex: string): number {
+  const [r, g, b] = hexToRgb(hex).map((channel) => {
+    const s = channel / 255;
+    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/** Picks a value/label text pair guaranteed to contrast with `background`, rather than a hand-picked color. */
+function contrastTextPair(background: string): { valueColor: string; labelColor: string } {
+  const isDark = relativeLuminance(background) < 0.5;
+  return isDark
+    ? { valueColor: '#f2f3f5', labelColor: '#aeb3bf' }
+    : { valueColor: '#16181d', labelColor: '#6b7280' };
+}
+
 const THEMES: Record<CardTheme, Palette> = {
   light: { background: '#ffffff', border: '#e3e5eb', labelColor: '#6b7280', valueColor: '#16181d' },
-  dark: { background: '#1c1e24', border: '#33363f', labelColor: '#9aa0ae', valueColor: '#f2f3f5' },
+  dark: { background: '#1c1e24', border: '#33363f', ...contrastTextPair('#1c1e24') },
   blue: { background: '#eaf2fb', border: '#c7dcf3', labelColor: '#3b6ea5', valueColor: '#1c3a57' },
   pink: { background: '#fbeaf0', border: '#f3c7d7', labelColor: '#a5476b', valueColor: '#571c33' },
 };
@@ -88,7 +110,7 @@ export async function composeCardImage(card: CardProfile, qrCanvas: HTMLCanvasEl
   // The banner area is always reserved at this height, whether or not the
   // card has a logo — so the rest of the layout (QR, details, address)
   // never shifts depending on whether a logo is set. Without a logo, the
-  // banner is simply left blank above the divider line.
+  // banner is simply left blank.
   const bannerHeight = 283;
   if (card.logo) {
     const logoImg = await loadImage(card.logo);
@@ -109,11 +131,6 @@ export async function composeCardImage(card: CardProfile, qrCanvas: HTMLCanvasEl
           : (width - logoWidth) / 2;
     ctx.drawImage(logoImg, logoX, logoY, logoWidth, logoHeight);
   }
-  ctx.strokeStyle = palette.border;
-  ctx.beginPath();
-  ctx.moveTo(0, bannerHeight);
-  ctx.lineTo(width, bannerHeight);
-  ctx.stroke();
   const bodyTop = bannerHeight;
 
   // bodyPadding and qrSize both trimmed slightly from the previous round to
