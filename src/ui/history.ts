@@ -7,6 +7,12 @@ const TYPE_LABEL: Record<HistoryEntry['type'], string> = {
   url: 'URL',
   wifi: 'Wi-Fi',
   text: 'Text',
+  email: 'Email',
+  phone: 'Phone',
+  sms: 'SMS',
+  geo: 'Location',
+  event: 'Event',
+  whatsapp: 'WhatsApp',
 };
 
 export function renderHistoryTab(container: HTMLElement): void {

@@ -1,4 +1,4 @@
-export type HistoryQrType = 'url' | 'wifi' | 'text';
+export type HistoryQrType = 'url' | 'wifi' | 'text' | 'email' | 'phone' | 'sms' | 'geo' | 'event' | 'whatsapp';
 
 export interface HistoryEntry {
   id: string;

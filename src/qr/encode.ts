@@ -41,6 +41,36 @@ function escapeVCardValue(value: string): string {
     .replace(/\n/g, '\\n');
 }
 
+export interface EmailFields {
+  to: string;
+  subject?: string;
+  body?: string;
+}
+
+export interface SmsFields {
+  phone: string;
+  message?: string;
+}
+
+export interface GeoFields {
+  lat: string;
+  lon: string;
+}
+
+export interface EventFields {
+  title: string;
+  /** `datetime-local` input value, e.g. "2026-01-01T10:00". */
+  start: string;
+  /** `datetime-local` input value, same format as `start`. */
+  end: string;
+  location?: string;
+}
+
+export interface WhatsAppFields {
+  phone: string;
+  message?: string;
+}
+
 export function buildUrlPayload(url: string): string {
   const trimmed = url.trim();
   if (!/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(trimmed)) {
@@ -77,4 +107,56 @@ export function buildVCardPayload(fields: VCardFields): string {
   // RFC 6350 specifies CRLF line endings; most camera-app parsers tolerate
   // bare \n, but CRLF is what makes it spec-correct.
   return lines.join('\r\n');
+}
+
+export function buildEmailPayload(fields: EmailFields): string {
+  const params = new URLSearchParams();
+  if (fields.subject) params.set('subject', fields.subject);
+  if (fields.body) params.set('body', fields.body);
+  const query = params.toString();
+  return `mailto:${fields.to.trim()}${query ? `?${query}` : ''}`;
+}
+
+/** Strips everything but a leading `+` and digits — the only characters valid in a `tel:`/`sms:` URI. */
+function sanitizePhone(phone: string): string {
+  return phone.trim().replace(/(?!^\+)[^\d]/g, '');
+}
+
+export function buildPhonePayload(phone: string): string {
+  return `tel:${sanitizePhone(phone)}`;
+}
+
+export function buildSmsPayload(fields: SmsFields): string {
+  // RFC 5724 form, understood by both iOS and Android camera apps.
+  const query = fields.message ? `?body=${encodeURIComponent(fields.message)}` : '';
+  return `sms:${sanitizePhone(fields.phone)}${query}`;
+}
+
+export function buildGeoPayload(fields: GeoFields): string {
+  return `geo:${fields.lat.trim()},${fields.lon.trim()}`;
+}
+
+/** Converts a `datetime-local` input value ("2026-01-01T10:00") to iCalendar's `YYYYMMDDTHHMMSS` local-time form. */
+function toIcsDateTime(value: string): string {
+  return value.replace(/[-:]/g, '').replace(/^(\d{8})T(\d{4})$/, '$1T$200');
+}
+
+export function buildEventPayload(fields: EventFields): string {
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'BEGIN:VEVENT',
+    `SUMMARY:${escapeVCardValue(fields.title)}`,
+    `DTSTART:${toIcsDateTime(fields.start)}`,
+    `DTEND:${toIcsDateTime(fields.end)}`,
+  ];
+  if (fields.location) lines.push(`LOCATION:${escapeVCardValue(fields.location)}`);
+  lines.push('END:VEVENT', 'END:VCALENDAR');
+  return lines.join('\r\n');
+}
+
+export function buildWhatsAppPayload(fields: WhatsAppFields): string {
+  const digits = sanitizePhone(fields.phone).replace(/^\+/, '');
+  const query = fields.message ? `?text=${encodeURIComponent(fields.message)}` : '';
+  return `https://wa.me/${digits}${query}`;
 }
