@@ -1,6 +1,7 @@
 import { renderQrToCanvas, downloadCanvasAsPng } from '../qr/render';
 import { deleteHistoryEntry, listHistory, MAX_HISTORY, type HistoryEntry } from '../history/store';
 import { renderCarousel } from './carousel';
+import { showImageOverlay } from './imageViewer';
 
 const TYPE_LABEL: Record<HistoryEntry['type'], string> = {
   url: 'URL',
@@ -37,6 +38,16 @@ export function renderHistoryTab(container: HTMLElement): void {
             const canvas = document.createElement('canvas');
             void renderQrToCanvas(canvas, entry.payload).then(() => {
               downloadCanvasAsPng(canvas, entry.label || 'qrcode');
+            });
+          },
+        },
+        {
+          label: 'View image',
+          className: 'secondary',
+          onClick: (entry) => {
+            const canvas = document.createElement('canvas');
+            void renderQrToCanvas(canvas, entry.payload).then(() => {
+              showImageOverlay(canvas, entry.label || 'QR code');
             });
           },
         },

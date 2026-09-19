@@ -506,6 +506,58 @@ button.secondary.danger:hover {
   color: var(--color-primary-fg);
 }
 
+.image-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  background: rgba(16, 17, 22, 0.92);
+}
+
+.image-overlay-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: max(10px, env(safe-area-inset-top)) 14px 10px max(14px, env(safe-area-inset-left));
+  color: #fff;
+  font-weight: 600;
+}
+
+.image-overlay-bar button.secondary {
+  min-height: 32px;
+  padding: 6px 10px;
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #fff;
+}
+
+.image-overlay-hint {
+  margin: 0;
+  padding: 0 14px 10px;
+  text-align: center;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.image-overlay-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px max(14px, env(safe-area-inset-bottom));
+  overflow: auto;
+}
+
+.image-overlay-body img {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+}
+
 .version-badge {
   position: fixed;
   right: max(10px, env(safe-area-inset-right));

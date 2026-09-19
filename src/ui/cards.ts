@@ -12,6 +12,7 @@ import {
 import { resizeImageToDataUrl } from '../util/image';
 import { composeCardImage } from '../cards/composeCardImage';
 import { renderCarousel } from './carousel';
+import { showImageOverlay } from './imageViewer';
 
 export function renderCardsTab(container: HTMLElement): void {
   let editingId: string | null = null;
@@ -69,6 +70,15 @@ export function renderCardsTab(container: HTMLElement): void {
             void getQrCanvas(card)
               .then((qrCanvas) => composeCardImage(card, qrCanvas))
               .then((composed) => downloadCanvasAsPng(composed, `${card.label || 'card'}`));
+          },
+        },
+        {
+          label: 'View image',
+          className: 'secondary',
+          onClick: (card) => {
+            void getQrCanvas(card)
+              .then((qrCanvas) => composeCardImage(card, qrCanvas))
+              .then((composed) => showImageOverlay(composed, card.label || 'Card'));
           },
         },
         {
