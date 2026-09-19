@@ -18,6 +18,7 @@ import { showImageOverlay } from './imageViewer';
 
 export function renderCardsTab(container: HTMLElement): void {
   let editingId: string | null = null;
+  let setCarouselLocked: (locked: boolean) => void = () => {};
 
   function renderTab(preferredId?: string): void {
     const cards = listCards();
@@ -106,13 +107,22 @@ export function renderCardsTab(container: HTMLElement): void {
       ],
     });
 
-    container.querySelector<HTMLButtonElement>('#add-card-btn')!.addEventListener('click', () => {
+    const addCardBtn = container.querySelector<HTMLButtonElement>('#add-card-btn')!;
+    addCardBtn.addEventListener('click', () => {
       editingId = null;
       showEditor(null);
     });
+
+    // While the editor is open, the carousel above it must not be navigable
+    // — switching cards mid-edit would silently discard unsaved changes.
+    setCarouselLocked = (locked: boolean) => {
+      carouselSlot.classList.toggle('carousel-locked', locked);
+      addCardBtn.disabled = locked || cards.length >= MAX_CARDS;
+    };
   }
 
   function showEditor(existing: CardProfile | null): void {
+    setCarouselLocked(true);
     const slot = container.querySelector<HTMLDivElement>('#editor-slot')!;
     slot.innerHTML = `
       <div class="field">
@@ -273,6 +283,7 @@ export function renderCardsTab(container: HTMLElement): void {
     slot.querySelector<HTMLButtonElement>('#c-cancel')!.addEventListener('click', () => {
       editingId = null;
       slot.innerHTML = '';
+      setCarouselLocked(false);
     });
   }
 

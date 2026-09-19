@@ -364,6 +364,13 @@ button.secondary.danger:hover {
   touch-action: none;
 }
 
+/* While the card editor is open, switching cards in the carousel above it
+   would silently discard unsaved edits — lock it out until Save/Cancel. */
+.carousel-locked {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
 .card-nav-btn {
   width: 100%;
   max-width: 600px;
