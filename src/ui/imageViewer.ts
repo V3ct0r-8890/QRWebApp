@@ -7,9 +7,16 @@
  * save via the browser/OS's own "Save Image" action, which works even
  * where scripted downloads don't.
  */
+const MOBILE_QUERY = '(max-width: 640px)';
+
 export function showImageOverlay(canvas: HTMLCanvasElement, title: string): void {
   const overlay = document.createElement('div');
-  overlay.className = 'image-overlay';
+  // On mobile, drop the fixed title bar/hint out of the layout and let the
+  // image fill the whole screen — maximizing it for a screenshot/share
+  // gesture, per the user's explicit "portrait mode, full screen if mobile"
+  // request (not tied to rotation/landscape).
+  const isMobile = window.matchMedia(MOBILE_QUERY).matches;
+  overlay.className = isMobile ? 'image-overlay image-overlay--fullscreen' : 'image-overlay';
   overlay.innerHTML = `
     <div class="image-overlay-bar">
       <span>${escapeHtml(title)}</span>
