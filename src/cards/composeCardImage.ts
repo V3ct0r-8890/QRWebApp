@@ -36,6 +36,35 @@ const THEMES: Record<CardTheme, Palette> = {
   pink: { background: '#fbeaf0', border: '#f3c7d7', labelColor: '#a5476b', valueColor: '#571c33' },
 };
 
+/**
+ * Average WCAG luminance of an image's non-transparent pixels, sampled from
+ * a small downscaled copy — cheap, and plenty accurate for a "is this logo
+ * roughly light or dark" decision.
+ */
+function imageAverageLuminance(img: HTMLImageElement): number {
+  const sampleSize = 32;
+  const sampleCanvas = document.createElement('canvas');
+  sampleCanvas.width = sampleSize;
+  sampleCanvas.height = sampleSize;
+  const sampleCtx = sampleCanvas.getContext('2d', { willReadFrequently: true });
+  if (!sampleCtx) return 1;
+  sampleCtx.drawImage(img, 0, 0, sampleSize, sampleSize);
+  const { data } = sampleCtx.getImageData(0, 0, sampleSize, sampleSize);
+
+  let sum = 0;
+  let count = 0;
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] < 16) continue; // skip near-transparent pixels
+    const [r, g, b] = [data[i], data[i + 1], data[i + 2]].map((channel) => {
+      const s = channel / 255;
+      return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+    });
+    sum += 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    count++;
+  }
+  return count ? sum / count : 1; // fully transparent logo — treat as light, no chip needed
+}
+
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -129,6 +158,31 @@ export async function composeCardImage(card: CardProfile, qrCanvas: HTMLCanvasEl
         : logoAlign === 'right'
           ? width - sidePadding - logoWidth
           : (width - logoWidth) / 2;
+
+    // If the logo's own tone is too close to the banner background — a dark
+    // logo on the dark theme, a white logo on the light theme, etc. — it can
+    // become nearly invisible. Rather than altering the user's uploaded
+    // artwork, detect that case and drop a contrasting backing plate behind
+    // it, the same non-destructive trick already used for the QR code.
+    const logoLuminance = imageAverageLuminance(logoImg);
+    const backgroundLuminance = relativeLuminance(palette.background);
+    const CONTRAST_GAP_THRESHOLD = 0.35;
+    if (Math.abs(logoLuminance - backgroundLuminance) < CONTRAST_GAP_THRESHOLD) {
+      const chipColor = backgroundLuminance < 0.5 ? '#ffffff' : '#1c1e24';
+      const chipPadding = 16;
+      const chipRadius = 12;
+      ctx.fillStyle = chipColor;
+      ctx.beginPath();
+      ctx.roundRect(
+        logoX - chipPadding,
+        logoY - chipPadding,
+        logoWidth + chipPadding * 2,
+        logoHeight + chipPadding * 2,
+        chipRadius,
+      );
+      ctx.fill();
+    }
+
     ctx.drawImage(logoImg, logoX, logoY, logoWidth, logoHeight);
   }
   const bodyTop = bannerHeight;
