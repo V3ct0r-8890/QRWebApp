@@ -1,5 +1,5 @@
 import { buildVCardPayload } from '../qr/encode';
-import { downloadCanvasAsPng, renderQrToCanvas } from '../qr/render';
+import { renderQrToCanvas, saveCanvasImage } from '../qr/render';
 import {
   CardLimitError,
   MAX_CARDS,
@@ -60,7 +60,7 @@ export function renderCardsTab(container: HTMLElement): void {
           label: 'Download QR',
           onClick: (card) => {
             void getQrCanvas(card).then((qrCanvas) => {
-              downloadCanvasAsPng(qrCanvas, `${card.label || 'card'}-qr`);
+              void saveCanvasImage(qrCanvas, `${card.label || 'card'}-qr`, `${card.label || 'card'} QR code`);
             });
           },
         },
@@ -69,7 +69,7 @@ export function renderCardsTab(container: HTMLElement): void {
           onClick: (card) => {
             void getQrCanvas(card)
               .then((qrCanvas) => composeCardImage(card, qrCanvas))
-              .then((composed) => downloadCanvasAsPng(composed, `${card.label || 'card'}`));
+              .then((composed) => saveCanvasImage(composed, `${card.label || 'card'}`, card.label || 'Card'));
           },
         },
         {

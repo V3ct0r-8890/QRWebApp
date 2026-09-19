@@ -1,5 +1,5 @@
 import { buildTextPayload, buildUrlPayload, buildWifiPayload, type WifiEncryption } from '../qr/encode';
-import { downloadCanvasAsPng, renderQrToCanvas } from '../qr/render';
+import { renderQrToCanvas, saveCanvasImage } from '../qr/render';
 import { saveToHistory } from '../history/store';
 
 type QrType = 'url' | 'wifi' | 'text';
@@ -126,7 +126,7 @@ export function renderGeneratorTab(container: HTMLElement): void {
     void handleGenerate();
   });
 
-  downloadBtn.addEventListener('click', () => downloadCanvasAsPng(canvas, 'qrcode'));
+  downloadBtn.addEventListener('click', () => void saveCanvasImage(canvas, 'qrcode', 'QR code'));
 
   saveHistoryBtn.addEventListener('click', () => {
     if (!lastGenerated) return;

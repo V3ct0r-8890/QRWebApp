@@ -1,4 +1,4 @@
-import { renderQrToCanvas, downloadCanvasAsPng } from '../qr/render';
+import { renderQrToCanvas, saveCanvasImage } from '../qr/render';
 import { deleteHistoryEntry, listHistory, MAX_HISTORY, type HistoryEntry } from '../history/store';
 import { renderCarousel } from './carousel';
 import { showImageOverlay } from './imageViewer';
@@ -37,7 +37,7 @@ export function renderHistoryTab(container: HTMLElement): void {
           onClick: (entry) => {
             const canvas = document.createElement('canvas');
             void renderQrToCanvas(canvas, entry.payload).then(() => {
-              downloadCanvasAsPng(canvas, entry.label || 'qrcode');
+              void saveCanvasImage(canvas, entry.label || 'qrcode', entry.label || 'QR code');
             });
           },
         },
