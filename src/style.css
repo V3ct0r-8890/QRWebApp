@@ -560,12 +560,22 @@ button.secondary.danger:hover {
   font-weight: 600;
 }
 
+.image-overlay-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .image-overlay-bar button.secondary {
   min-height: 32px;
   padding: 6px 10px;
   background: transparent;
   border-color: rgba(255, 255, 255, 0.4);
   color: #fff;
+}
+
+.image-overlay-bar button.secondary[aria-pressed='true'] {
+  background: rgba(255, 255, 255, 0.28);
 }
 
 .image-overlay-hint {
@@ -603,6 +613,17 @@ button.secondary.danger:hover {
   object-fit: contain;
   border-radius: 0;
   box-shadow: none;
+}
+
+/* Turns the (landscape) image on its side to fill a portrait phone screen
+   far more fully — width/height are pre-swapped to the viewport's opposite
+   axis so the rotated box still fits exactly within it. */
+.image-overlay--fullscreen.image-overlay--rotated .image-overlay-body img {
+  width: 100vh;
+  height: 100vw;
+  max-width: 100vh;
+  max-height: 100vw;
+  transform: rotate(90deg);
 }
 
 .image-overlay--fullscreen .image-overlay-bar {
