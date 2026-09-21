@@ -2,6 +2,11 @@ import type { VCardFields } from '../qr/encode';
 
 export type LogoAlign = 'left' | 'center' | 'right';
 export type CardTheme = 'light' | 'dark' | 'blue' | 'pink';
+/**
+ * Where the logo banner and the QR sit: `<logo position>-<qr position>`.
+ * Defaults to 'top-left' (today's look — logo on top, QR on the left).
+ */
+export type CardLayout = 'top-left' | 'bottom-left' | 'top-right' | 'bottom-right';
 
 export interface CardProfile extends VCardFields {
   id: string;
@@ -13,6 +18,8 @@ export interface CardProfile extends VCardFields {
   logoAlign?: LogoAlign;
   /** Card color theme. Defaults to 'light' (today's look). */
   theme?: CardTheme;
+  /** Logo/QR/contact arrangement. Defaults to 'top-left'. */
+  layout?: CardLayout;
 }
 
 export const MAX_CARDS = 10;

@@ -1,4 +1,4 @@
-import type { CardProfile, CardTheme } from './store';
+import type { CardLayout, CardProfile, CardTheme } from './store';
 
 interface Palette {
   background: string;
@@ -129,6 +129,9 @@ export async function composeCardImage(card: CardProfile, qrCanvas: HTMLCanvasEl
 
   const palette = THEMES[card.theme ?? 'light'];
   const logoAlign = card.logoAlign ?? 'center';
+  const layout: CardLayout = card.layout ?? 'top-left';
+  const logoAtBottom = layout === 'bottom-left' || layout === 'bottom-right';
+  const qrOnRight = layout === 'top-right' || layout === 'bottom-right';
 
   ctx.fillStyle = palette.background;
   ctx.fillRect(0, 0, width, height);
@@ -139,8 +142,10 @@ export async function composeCardImage(card: CardProfile, qrCanvas: HTMLCanvasEl
   // The banner area is always reserved at this height, whether or not the
   // card has a logo — so the rest of the layout (QR, details, address)
   // never shifts depending on whether a logo is set. Without a logo, the
-  // banner is simply left blank.
+  // banner is simply left blank. Its vertical slot (top or bottom) is
+  // decided by the chosen layout.
   const bannerHeight = 283;
+  const bannerY = logoAtBottom ? height - bannerHeight : 0;
   if (card.logo) {
     const logoImg = await loadImage(card.logo);
     // Contain-fit within a fixed box — scaling by the tighter of the two
@@ -151,7 +156,7 @@ export async function composeCardImage(card: CardProfile, qrCanvas: HTMLCanvasEl
     const scale = Math.min(boxW / logoImg.width, boxH / logoImg.height);
     const logoWidth = logoImg.width * scale;
     const logoHeight = logoImg.height * scale;
-    const logoY = (bannerHeight - logoHeight) / 2;
+    const logoY = bannerY + (bannerHeight - logoHeight) / 2;
     const logoX =
       logoAlign === 'left'
         ? sidePadding
@@ -185,14 +190,14 @@ export async function composeCardImage(card: CardProfile, qrCanvas: HTMLCanvasEl
 
     ctx.drawImage(logoImg, logoX, logoY, logoWidth, logoHeight);
   }
-  const bodyTop = bannerHeight;
+  const bodyTop = logoAtBottom ? 0 : bannerHeight;
 
   // bodyPadding and qrSize both trimmed slightly from the previous round to
   // make room for the new address block at the bottom, within the fixed
   // 1200x800 frame.
   const bodyPadding = 40;
   const qrSize = 380;
-  const qrX = sidePadding;
+  const qrX = qrOnRight ? width - sidePadding - qrSize : sidePadding;
   const qrY = bodyTop + bodyPadding;
   // The QR itself always stays plain black-on-white for scan reliability —
   // a white backing chip (with its own quiet-zone margin) keeps it readable
@@ -212,7 +217,7 @@ export async function composeCardImage(card: CardProfile, qrCanvas: HTMLCanvasEl
   ].filter((f) => f.value) as Field[];
 
   const lineHeight = 68;
-  const textX = qrX + qrSize + 40;
+  const textX = qrOnRight ? sidePadding : qrX + qrSize + 40;
   let textY = qrY + 40;
 
   ctx.textBaseline = 'alphabetic';

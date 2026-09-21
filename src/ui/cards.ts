@@ -7,6 +7,7 @@ import {
   generateCardId,
   listCards,
   saveCard,
+  type CardLayout,
   type CardProfile,
   type CardTheme,
   type LogoAlign,
@@ -147,6 +148,15 @@ export function renderCardsTab(container: HTMLElement): void {
           <option value="pink">Pink (pastel)</option>
         </select>
       </div>
+      <div class="field">
+        <label for="c-layout">Card layout</label>
+        <select id="c-layout">
+          <option value="top-left">Logo top · QR left · contact right</option>
+          <option value="bottom-left">Logo bottom · QR left · contact right</option>
+          <option value="top-right">Logo top · contact left · QR right</option>
+          <option value="bottom-right">Logo bottom · contact left · QR right</option>
+        </select>
+      </div>
       <div class="field"><label for="c-label">Slot label</label><input id="c-label" /></div>
       <div class="field"><label for="c-name">Full name *</label><input id="c-name" /></div>
       <div class="field"><label for="c-org">Organization</label><input id="c-org" /></div>
@@ -218,6 +228,9 @@ export function renderCardsTab(container: HTMLElement): void {
     const themeSelect = slot.querySelector<HTMLSelectElement>('#c-theme')!;
     themeSelect.value = existing?.theme ?? 'light';
 
+    const layoutSelect = slot.querySelector<HTMLSelectElement>('#c-layout')!;
+    layoutSelect.value = existing?.layout ?? 'top-left';
+
     const fields: Record<string, HTMLInputElement | HTMLTextAreaElement> = {
       label: slot.querySelector('#c-label')!,
       fullName: slot.querySelector('#c-name')!,
@@ -264,6 +277,7 @@ export function renderCardsTab(container: HTMLElement): void {
         logo: logoDataUrl,
         logoAlign,
         theme: themeSelect.value as CardTheme,
+        layout: layoutSelect.value as CardLayout,
       };
       try {
         saveCard(card);
