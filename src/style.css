@@ -617,12 +617,16 @@ button.secondary.danger:hover {
 
 /* Turns the (landscape) image on its side to fill a portrait phone screen
    far more fully — width/height are pre-swapped to the viewport's opposite
-   axis so the rotated box still fits exactly within it. */
+   axis so the rotated box still fits exactly within it. Uses dvh/dvw
+   (dynamic viewport units), not vh/vw: on mobile Safari/Chrome, vh/vw
+   include the area hidden behind the collapsing address bar, so the box
+   can end up larger than what's actually visible — the same mismatch
+   `.card-preview-inner`'s mobile rule already works around with dvh. */
 .image-overlay--fullscreen.image-overlay--rotated .image-overlay-body img {
-  width: 100vh;
-  height: 100vw;
-  max-width: 100vh;
-  max-height: 100vw;
+  width: 100dvh;
+  height: 100dvw;
+  max-width: 100dvh;
+  max-height: 100dvw;
   transform: rotate(90deg);
 }
 
