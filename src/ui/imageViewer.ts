@@ -14,6 +14,10 @@ const MOBILE_QUERY = '(max-width: 640px)';
 // the image on its side lets it fill far more of the screen. Remembered
 // per-browser so the choice doesn't have to be repeated every time.
 const ROTATE_STORAGE_KEY = 'qrwebapp.imageOverlay.rotated';
+// One-hand use: on a phone the top edge is out of thumb reach, so the
+// title/close/rotate bar can dock at the bottom instead. Defaults to bottom;
+// stored as '0' only once the user moves it back to the top.
+const BAR_BOTTOM_STORAGE_KEY = 'qrwebapp.imageOverlay.barBottom';
 
 function getStoredRotatePreference(): boolean {
   try {
@@ -31,6 +35,22 @@ function setStoredRotatePreference(rotated: boolean): void {
   }
 }
 
+function getStoredBarBottomPreference(): boolean {
+  try {
+    return localStorage.getItem(BAR_BOTTOM_STORAGE_KEY) !== '0';
+  } catch {
+    return true;
+  }
+}
+
+function setStoredBarBottomPreference(bottom: boolean): void {
+  try {
+    localStorage.setItem(BAR_BOTTOM_STORAGE_KEY, bottom ? '1' : '0');
+  } catch {
+    // Best-effort — if storage is full/blocked, the choice just isn't remembered.
+  }
+}
+
 export function showImageOverlay(canvas: HTMLCanvasElement, title: string): void {
   const overlay = document.createElement('div');
   // On mobile, drop the fixed title bar/hint out of the layout and let the
@@ -43,6 +63,7 @@ export function showImageOverlay(canvas: HTMLCanvasElement, title: string): void
     <div class="image-overlay-bar">
       <span>${escapeHtml(title)}</span>
       <div class="image-overlay-actions">
+        ${isMobile ? '<button class="secondary" id="image-overlay-dock" type="button"></button>' : ''}
         ${isMobile ? `<button class="secondary" id="image-overlay-rotate" type="button" aria-label="Rotate to fit screen">${icon('rotate')}</button>` : ''}
         <button class="secondary" id="image-overlay-close" type="button" aria-label="Close">${icon('close')}</button>
       </div>
@@ -69,6 +90,23 @@ export function showImageOverlay(canvas: HTMLCanvasElement, title: string): void
       rotated = !rotated;
       setStoredRotatePreference(rotated);
       applyRotation();
+    });
+
+    const dockBtn = overlay.querySelector<HTMLButtonElement>('#image-overlay-dock')!;
+    let barBottom = getStoredBarBottomPreference();
+    const applyDock = () => {
+      overlay.classList.toggle('image-overlay--bar-bottom', barBottom);
+      // Icon/label describe where the bar will move to on tap.
+      const label = barBottom ? 'Move controls to top' : 'Move controls to bottom';
+      dockBtn.innerHTML = icon(barBottom ? 'dockTop' : 'dockBottom');
+      dockBtn.title = label;
+      dockBtn.setAttribute('aria-label', label);
+    };
+    applyDock();
+    dockBtn.addEventListener('click', () => {
+      barBottom = !barBottom;
+      setStoredBarBottomPreference(barBottom);
+      applyDock();
     });
   }
 

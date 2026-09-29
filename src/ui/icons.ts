@@ -15,6 +15,8 @@ const PATHS = {
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6 6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/>',
   moon: '<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/>',
   monitor: '<rect x="3" y="4" width="18" height="12.5" rx="2"/><path d="M8.5 20.5h7M12 16.5v4"/>',
+  dockBottom: '<rect x="3.5" y="3.5" width="17" height="17" rx="2.5"/><path d="M3.5 15.5h17"/><path d="m9.5 8 2.5 2.5L14.5 8"/>',
+  dockTop: '<rect x="3.5" y="3.5" width="17" height="17" rx="2.5"/><path d="M3.5 8.5h17"/><path d="m9.5 16 2.5-2.5 2.5 2.5"/>',
   plus: '<path d="M12 5v14M5 12h14"/>',
 } as const;
 
