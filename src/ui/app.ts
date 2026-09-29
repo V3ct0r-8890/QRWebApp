@@ -2,9 +2,13 @@ import { renderGeneratorTab } from './generator';
 import { renderCardsTab } from './cards';
 import { renderHistoryTab } from './history';
 import { detectPlatform } from '../platform';
-import { icon } from './icons';
+import { icon, type IconName } from './icons';
+import { applyTheme, getThemePreference, nextThemePreference, setThemePreference, type ThemePreference } from '../theme';
 
 type TabId = 'cards' | 'generate' | 'history';
+
+const THEME_ICON: Record<ThemePreference, IconName> = { system: 'monitor', light: 'sun', dark: 'moon' };
+const THEME_LABEL: Record<ThemePreference, string> = { system: 'System', light: 'Light', dark: 'Dark' };
 
 export function mountApp(root: HTMLElement): void {
   document.documentElement.dataset.platform = detectPlatform();
@@ -16,6 +20,7 @@ export function mountApp(root: HTMLElement): void {
         <h1>QR Web App</h1>
         <p class="subtitle">Generate &amp; save QR codes, fully offline</p>
       </div>
+      <button class="theme-toggle" id="theme-toggle" type="button"></button>
     </header>
     <div class="layout">
       <nav class="side-tabs" role="tablist" aria-orientation="vertical">
@@ -38,6 +43,23 @@ export function mountApp(root: HTMLElement): void {
   const tabGenerate = root.querySelector<HTMLButtonElement>('#tab-generate')!;
   const tabCards = root.querySelector<HTMLButtonElement>('#tab-cards')!;
   const tabHistory = root.querySelector<HTMLButtonElement>('#tab-history')!;
+
+  const themeToggle = root.querySelector<HTMLButtonElement>('#theme-toggle')!;
+  let themePref = getThemePreference();
+  // index.html already set data-theme pre-paint; this also syncs the theme-color metas.
+  applyTheme(themePref);
+  function renderThemeToggle(): void {
+    const next = nextThemePreference(themePref);
+    themeToggle.innerHTML = icon(THEME_ICON[themePref]);
+    themeToggle.title = `Theme: ${THEME_LABEL[themePref]} (switch to ${THEME_LABEL[next]})`;
+    themeToggle.setAttribute('aria-label', `Theme: ${THEME_LABEL[themePref]}. Switch to ${THEME_LABEL[next]}`);
+  }
+  renderThemeToggle();
+  themeToggle.addEventListener('click', () => {
+    themePref = nextThemePreference(themePref);
+    setThemePreference(themePref);
+    renderThemeToggle();
+  });
 
   function showTab(tab: TabId): void {
     tabGenerate.setAttribute('aria-selected', String(tab === 'generate'));

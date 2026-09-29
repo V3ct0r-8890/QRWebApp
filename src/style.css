@@ -166,6 +166,28 @@ h1 {
   letter-spacing: -0.015em;
 }
 
+.theme-toggle {
+  margin-left: auto;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--color-muted);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+
+.theme-toggle:hover {
+  background: var(--color-subtle);
+  color: var(--color-fg);
+}
+
 .app-header .subtitle {
   font-size: 0.8rem;
   color: var(--color-muted);
