@@ -2,6 +2,7 @@ import { renderGeneratorTab } from './generator';
 import { renderCardsTab } from './cards';
 import { renderHistoryTab } from './history';
 import { detectPlatform } from '../platform';
+import { icon } from './icons';
 
 type TabId = 'cards' | 'generate' | 'history';
 
@@ -19,13 +20,13 @@ export function mountApp(root: HTMLElement): void {
     <div class="layout">
       <nav class="side-tabs" role="tablist" aria-orientation="vertical">
         <button id="tab-cards" role="tab" aria-selected="true">
-          <span class="tab-icon" aria-hidden="true">🪪</span><span class="tab-label">My Cards</span>
+          <span class="tab-icon" aria-hidden="true">${icon('card')}</span><span class="tab-label">My Cards</span>
         </button>
         <button id="tab-generate" role="tab" aria-selected="false">
-          <span class="tab-icon" aria-hidden="true">▦</span><span class="tab-label">Generate</span>
+          <span class="tab-icon" aria-hidden="true">${icon('qr')}</span><span class="tab-label">Generate</span>
         </button>
         <button id="tab-history" role="tab" aria-selected="false">
-          <span class="tab-icon" aria-hidden="true">🕘</span><span class="tab-label">History</span>
+          <span class="tab-icon" aria-hidden="true">${icon('history')}</span><span class="tab-label">History</span>
         </button>
       </nav>
       <div id="tab-content" class="content-area"></div>

@@ -13,11 +13,15 @@ import {
 import { renderQrToCanvas, saveCanvasImage } from '../qr/render';
 import { saveToHistory } from '../history/store';
 import { showImageOverlay } from './imageViewer';
+import { icon } from './icons';
 
 type QrType = 'url' | 'wifi' | 'text' | 'email' | 'phone' | 'sms' | 'geo' | 'event' | 'whatsapp';
 
 export function renderGeneratorTab(container: HTMLElement): void {
   container.innerHTML = `
+    <div class="tab-head">
+      <h2 class="tab-title">Generate</h2>
+    </div>
     <div class="field">
       <label for="qr-type">QR type</label>
       <select id="qr-type">
@@ -39,13 +43,13 @@ export function renderGeneratorTab(container: HTMLElement): void {
       <canvas id="qr-canvas"></canvas>
       <div class="row" id="qr-output-toolbar">
         <button class="secondary" id="download-btn" type="button" title="Download PNG" aria-label="Download PNG">
-          <span class="btn-icon" aria-hidden="true">⬇️</span><span class="btn-label">Download PNG</span>
+          <span class="btn-icon" aria-hidden="true">${icon('download')}</span><span class="btn-label">Download PNG</span>
         </button>
         <button class="secondary" id="view-image-btn" type="button" title="View image" aria-label="View image">
-          <span class="btn-icon" aria-hidden="true">👁️</span><span class="btn-label">View image</span>
+          <span class="btn-icon" aria-hidden="true">${icon('eye')}</span><span class="btn-label">View image</span>
         </button>
         <button class="secondary" id="save-history-btn" type="button" title="Save to history" aria-label="Save to history">
-          <span class="btn-icon" aria-hidden="true">💾</span><span class="btn-label">Save to history</span>
+          <span class="btn-icon" aria-hidden="true">${icon('bookmark')}</span><span class="btn-label">Save to history</span>
         </button>
       </div>
       <p class="status-text" id="save-status" hidden></p>
@@ -93,7 +97,7 @@ export function renderGeneratorTab(container: HTMLElement): void {
           </select>
         </div>
         <div class="field">
-          <label><input id="f-hidden" type="checkbox" style="width:auto;min-height:auto;" /> Hidden network</label>
+          <label class="checkbox-label"><input id="f-hidden" type="checkbox" /> Hidden network</label>
         </div>
       `;
     } else if (type === 'text') {

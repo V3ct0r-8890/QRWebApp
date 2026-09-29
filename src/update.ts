@@ -1,4 +1,5 @@
 import { registerSW } from 'virtual:pwa-register';
+import { icon } from './ui/icons';
 
 /**
  * Registers the service worker and surfaces a confirm-before-reload banner
@@ -17,9 +18,9 @@ export function initAppUpdate(): void {
     banner.className = 'update-banner';
     banner.innerHTML = `
       <span>A new version is available.</span>
-      <span class="row" style="flex:none;">
+      <span class="update-banner-actions">
         <button class="primary" id="update-banner-reload" type="button">Reload</button>
-        <button class="secondary" id="update-banner-dismiss" type="button" aria-label="Dismiss">✕</button>
+        <button class="secondary" id="update-banner-dismiss" type="button" aria-label="Dismiss">${icon('close')}</button>
       </span>
     `;
     document.body.appendChild(banner);

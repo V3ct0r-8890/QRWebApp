@@ -1,3 +1,5 @@
+import { icon } from './icons';
+
 /**
  * Full-screen overlay showing a canvas as a plain <img>. Several mobile
  * browsers (iOS Safari, and most in-app webviews such as Instagram/Line/
@@ -41,8 +43,8 @@ export function showImageOverlay(canvas: HTMLCanvasElement, title: string): void
     <div class="image-overlay-bar">
       <span>${escapeHtml(title)}</span>
       <div class="image-overlay-actions">
-        ${isMobile ? '<button class="secondary" id="image-overlay-rotate" type="button" aria-label="Rotate to fit screen">⟳</button>' : ''}
-        <button class="secondary" id="image-overlay-close" type="button" aria-label="Close">✕</button>
+        ${isMobile ? `<button class="secondary" id="image-overlay-rotate" type="button" aria-label="Rotate to fit screen">${icon('rotate')}</button>` : ''}
+        <button class="secondary" id="image-overlay-close" type="button" aria-label="Close">${icon('close')}</button>
       </div>
     </div>
     <p class="image-overlay-hint">Press and hold the image, then choose "Save Image" to save it.</p>

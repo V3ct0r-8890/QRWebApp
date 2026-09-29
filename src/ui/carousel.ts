@@ -1,14 +1,15 @@
+import { icon, type IconName } from './icons';
+
 /**
  * Shared "scroll through one item at a time" viewer — the engine behind
  * both the Cards and History tabs. Renders a single preloaded, cached,
  * loop-navigable preview (wheel / touch-swipe / ▲▼ buttons) plus a
  * caller-defined toolbar, with no separate list of rows alongside it.
  */
-
 export interface CarouselButton<T> {
   label: string;
   /** Shown in place of the label on narrow screens (icon-only, via CSS) — label is always kept as the accessible name/tooltip. */
-  icon?: string;
+  icon?: IconName;
   className?: string; // defaults to 'secondary'
   onClick: (item: T, index: number) => void;
 }
@@ -44,10 +45,10 @@ export function renderCarousel<T extends { id: string }>(host: HTMLElement, opti
   host.innerHTML = `
     <div class="qr-output">
       <div class="card-viewer" id="carousel-viewer">
-        <button class="card-nav-btn" id="carousel-nav-up" type="button" aria-label="Previous" ${items.length < 2 ? 'hidden' : ''}>▲</button>
+        <button class="card-nav-btn" id="carousel-nav-up" type="button" aria-label="Previous" ${items.length < 2 ? 'hidden' : ''}>${icon('chevronUp')}</button>
         ${options.caption ? '<p class="carousel-caption" id="carousel-caption"></p>' : ''}
         <div class="${previewHostClassName}" id="carousel-preview-host"></div>
-        <button class="card-nav-btn" id="carousel-nav-down" type="button" aria-label="Next" ${items.length < 2 ? 'hidden' : ''}>▼</button>
+        <button class="card-nav-btn" id="carousel-nav-down" type="button" aria-label="Next" ${items.length < 2 ? 'hidden' : ''}>${icon('chevronDown')}</button>
       </div>
       <p class="card-position" id="carousel-position" ${items.length < 2 ? 'hidden' : ''}></p>
       <div class="row" id="carousel-toolbar"></div>
@@ -74,7 +75,8 @@ export function renderCarousel<T extends { id: string }>(host: HTMLElement, opti
       const iconSpan = document.createElement('span');
       iconSpan.className = 'btn-icon';
       iconSpan.setAttribute('aria-hidden', 'true');
-      iconSpan.textContent = btn.icon;
+      // Constant SVG markup from icons.ts — never user input.
+      iconSpan.innerHTML = icon(btn.icon);
       el.appendChild(iconSpan);
     }
     const labelSpan = document.createElement('span');

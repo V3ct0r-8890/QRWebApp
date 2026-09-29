@@ -16,6 +16,7 @@ import { resizeImageToDataUrl } from '../util/image';
 import { composeCardImage } from '../cards/composeCardImage';
 import { renderCarousel } from './carousel';
 import { showImageOverlay } from './imageViewer';
+import { icon } from './icons';
 
 export function renderCardsTab(container: HTMLElement): void {
   let editingId: string | null = null;
@@ -24,10 +25,13 @@ export function renderCardsTab(container: HTMLElement): void {
   function renderTab(preferredId?: string): void {
     const cards = listCards();
     container.innerHTML = `
-      <p>${cards.length} / ${MAX_CARDS} saved cards</p>
+      <div class="tab-head">
+        <h2 class="tab-title">My Cards</h2>
+        <span class="count-pill">${cards.length} / ${MAX_CARDS} saved</span>
+      </div>
       <div id="carousel-slot"></div>
-      <button class="primary" id="add-card-btn" type="button" ${cards.length >= MAX_CARDS ? 'disabled' : ''}>
-        + New card
+      <button class="primary with-icon" id="add-card-btn" type="button" ${cards.length >= MAX_CARDS ? 'disabled' : ''}>
+        ${icon('plus')}<span>New card</span>
       </button>
       <p class="error-text" id="list-error" hidden></p>
       <div id="editor-slot"></div>
@@ -62,7 +66,7 @@ export function renderCardsTab(container: HTMLElement): void {
       buttons: [
         {
           label: 'Download QR',
-          icon: '⬇️',
+          icon: 'download',
           onClick: (card) => {
             void getQrCanvas(card).then((qrCanvas) => {
               void saveCanvasImage(qrCanvas, `${card.label || 'card'}-qr`, `${card.label || 'card'} QR code`);
@@ -71,7 +75,7 @@ export function renderCardsTab(container: HTMLElement): void {
         },
         {
           label: 'Download card image',
-          icon: '🖼️',
+          icon: 'image',
           onClick: (card) => {
             void getQrCanvas(card)
               .then((qrCanvas) => composeCardImage(card, qrCanvas))
@@ -80,7 +84,7 @@ export function renderCardsTab(container: HTMLElement): void {
         },
         {
           label: 'View image',
-          icon: '👁️',
+          icon: 'eye',
           className: 'secondary',
           onClick: (card) => {
             void getQrCanvas(card)
@@ -90,7 +94,7 @@ export function renderCardsTab(container: HTMLElement): void {
         },
         {
           label: 'Edit',
-          icon: '✏️',
+          icon: 'edit',
           onClick: (card) => {
             editingId = card.id;
             showEditor(card);
@@ -98,7 +102,7 @@ export function renderCardsTab(container: HTMLElement): void {
         },
         {
           label: 'Delete',
-          icon: '🗑️',
+          icon: 'trash',
           className: 'secondary danger',
           onClick: (card) => {
             deleteCard(card.id);
@@ -130,7 +134,7 @@ export function renderCardsTab(container: HTMLElement): void {
         <label for="c-logo">Logo</label>
         <div class="logo-upload-row">
           <img id="c-logo-preview" alt="" hidden />
-          <input id="c-logo" type="file" accept="image/*" style="width:auto;min-height:auto;" />
+          <input id="c-logo" type="file" accept="image/*" />
           <button class="secondary" id="c-logo-remove" type="button" hidden>Remove</button>
         </div>
         <div class="segmented-control" id="c-logo-align" role="radiogroup" aria-label="Logo alignment">

@@ -19,7 +19,11 @@ export function renderHistoryTab(container: HTMLElement): void {
   function renderTab(preferredId?: string): void {
     const entries = listHistory();
     container.innerHTML = `
-      <p>${entries.length} / ${MAX_HISTORY} recent — oldest drops off automatically</p>
+      <div class="tab-head">
+        <h2 class="tab-title">History</h2>
+        <span class="count-pill">${entries.length} / ${MAX_HISTORY}</span>
+      </div>
+      <p class="tab-hint">Most recent first — the oldest drops off automatically.</p>
       <div id="carousel-slot"></div>
     `;
 
@@ -40,7 +44,7 @@ export function renderHistoryTab(container: HTMLElement): void {
       buttons: [
         {
           label: 'Download PNG',
-          icon: '⬇️',
+          icon: 'download',
           onClick: (entry) => {
             const canvas = document.createElement('canvas');
             void renderQrToCanvas(canvas, entry.payload).then(() => {
@@ -50,7 +54,7 @@ export function renderHistoryTab(container: HTMLElement): void {
         },
         {
           label: 'View image',
-          icon: '👁️',
+          icon: 'eye',
           className: 'secondary',
           onClick: (entry) => {
             const canvas = document.createElement('canvas');
@@ -61,7 +65,7 @@ export function renderHistoryTab(container: HTMLElement): void {
         },
         {
           label: 'Delete',
-          icon: '🗑️',
+          icon: 'trash',
           className: 'secondary danger',
           onClick: (entry) => {
             deleteHistoryEntry(entry.id);
