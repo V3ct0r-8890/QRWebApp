@@ -8,11 +8,13 @@
     <meta name="description" content="Generate QR codes for URLs, Wi-Fi, text, and saved business cards — fully offline." />
     <title>QR Web App</title>
     <script>
-      // Apply a saved light/dark choice before first paint (no flash).
-      // Mirrors src/theme.ts — keep the storage key in sync.
+      // Apply saved light/dark and controls choices before first paint (no flash).
+      // Mirrors src/theme.ts and src/controls.ts — keep the storage keys in sync.
       try {
         var t = localStorage.getItem('qrwebapp.theme');
         if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+        // One-hand controls mode — mirrors src/controls.ts.
+        if (localStorage.getItem('qrwebapp.controls') === 'bottom') document.documentElement.dataset.controls = 'bottom';
       } catch (e) {}
     </script>
     <link rel="icon" href="./icons/icon-192.png" />

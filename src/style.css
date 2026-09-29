@@ -166,8 +166,24 @@ h1 {
   letter-spacing: -0.015em;
 }
 
-.theme-toggle {
+.header-actions {
   margin-left: auto;
+  display: flex;
+  gap: 8px;
+  flex: none;
+}
+
+/* One-hand mode only exists on phones. */
+:root[data-platform='desktop'] #controls-toggle {
+  display: none;
+}
+
+.theme-toggle[aria-pressed='true'] {
+  color: var(--color-accent);
+  border-color: color-mix(in srgb, var(--color-accent) 40%, var(--color-border));
+}
+
+.theme-toggle {
   flex: none;
   display: grid;
   place-items: center;
@@ -1029,4 +1045,81 @@ button.with-icon .icon {
   #qr-output-toolbar .btn-label {
     display: inline;
   }
+}
+
+/* ------------------------------------------------------------------
+   One-hand "Controls: Bottom" mode (mobile only — src/controls.ts).
+   Everything tappable moves within thumb reach, above the bottom tab bar.
+   ------------------------------------------------------------------ */
+:root {
+  /* Bottom tab bar height excluding the safe-area inset (6px + 52px button). */
+  --tabbar-h: 58px;
+  --above-tabbar: calc(var(--tabbar-h) + max(6px, env(safe-area-inset-bottom)));
+}
+
+/* Theme + Controls buttons leave the header and sit at the right end of the tab bar. */
+:root[data-platform='mobile'][data-controls='bottom'] .header-actions {
+  position: fixed;
+  right: max(8px, env(safe-area-inset-right));
+  bottom: max(6px, env(safe-area-inset-bottom));
+  height: 52px;
+  align-items: center;
+  gap: 6px;
+  z-index: 21;
+}
+
+:root[data-platform='mobile'][data-controls='bottom'] .side-tabs {
+  padding-right: calc(max(8px, env(safe-area-inset-right)) + 2 * 40px + 6px + 8px);
+}
+
+/* Card/History ▲▼: side by side under the preview instead of above/below it. */
+:root[data-platform='mobile'][data-controls='bottom'] .card-viewer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 12px;
+  row-gap: 8px;
+}
+
+:root[data-platform='mobile'][data-controls='bottom'] .card-viewer > :not(.card-nav-btn) {
+  grid-column: 1 / -1;
+}
+
+:root[data-platform='mobile'][data-controls='bottom'] .card-nav-btn {
+  /* Grid auto-placement follows `order`, so both buttons land in a final row. */
+  order: 1;
+  width: 64px;
+  height: 40px;
+  background: var(--color-subtle);
+}
+
+:root[data-platform='mobile'][data-controls='bottom'] #carousel-nav-up {
+  justify-self: end;
+}
+
+:root[data-platform='mobile'][data-controls='bottom'] #carousel-nav-down {
+  justify-self: start;
+}
+
+/* Save/Cancel and Generate stay pinned just above the tab bar while
+   scrolling. Sticky (not fixed) keeps their own space in the flow, so no
+   field ends up permanently hidden behind them. */
+:root[data-platform='mobile'][data-controls='bottom'] .editor-actions,
+:root[data-platform='mobile'][data-controls='bottom'] #generate-btn {
+  position: sticky;
+  bottom: calc(var(--above-tabbar) + 8px);
+  z-index: 5;
+  box-shadow: var(--shadow-float);
+}
+
+:root[data-platform='mobile'][data-controls='bottom'] .editor-actions {
+  padding: 8px;
+  margin: -8px;
+  background: var(--color-surface);
+  border-radius: calc(var(--radius-sm) + 8px);
+}
+
+/* Update banner pops up from the bottom, above the tab bar. */
+:root[data-platform='mobile'][data-controls='bottom'] .update-banner {
+  top: auto;
+  bottom: calc(var(--above-tabbar) + 12px);
 }

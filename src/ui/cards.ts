@@ -170,7 +170,7 @@ export function renderCardsTab(container: HTMLElement): void {
       <div class="field"><label for="c-url">Website</label><input id="c-url" type="text" /></div>
       <div class="field"><label for="c-address">Address</label><textarea id="c-address" rows="2"></textarea></div>
       <div class="field"><label for="c-note">Note</label><textarea id="c-note" rows="2"></textarea></div>
-      <div class="row">
+      <div class="row editor-actions">
         <button class="primary" id="c-save" type="button">Save</button>
         <button class="secondary" id="c-cancel" type="button">Cancel</button>
       </div>

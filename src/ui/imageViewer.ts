@@ -1,4 +1,5 @@
 import { icon } from './icons';
+import { CONTROLS_CHANGE_EVENT, getControlsMode, setControlsMode } from '../controls';
 
 /**
  * Full-screen overlay showing a canvas as a plain <img>. Several mobile
@@ -14,10 +15,6 @@ const MOBILE_QUERY = '(max-width: 640px)';
 // the image on its side lets it fill far more of the screen. Remembered
 // per-browser so the choice doesn't have to be repeated every time.
 const ROTATE_STORAGE_KEY = 'qrwebapp.imageOverlay.rotated';
-// One-hand use: on a phone the top edge is out of thumb reach, so the
-// title/close/rotate bar can dock at the bottom instead. Defaults to bottom;
-// stored as '0' only once the user moves it back to the top.
-const BAR_BOTTOM_STORAGE_KEY = 'qrwebapp.imageOverlay.barBottom';
 
 function getStoredRotatePreference(): boolean {
   try {
@@ -30,22 +27,6 @@ function getStoredRotatePreference(): boolean {
 function setStoredRotatePreference(rotated: boolean): void {
   try {
     localStorage.setItem(ROTATE_STORAGE_KEY, rotated ? '1' : '0');
-  } catch {
-    // Best-effort — if storage is full/blocked, the choice just isn't remembered.
-  }
-}
-
-function getStoredBarBottomPreference(): boolean {
-  try {
-    return localStorage.getItem(BAR_BOTTOM_STORAGE_KEY) !== '0';
-  } catch {
-    return true;
-  }
-}
-
-function setStoredBarBottomPreference(bottom: boolean): void {
-  try {
-    localStorage.setItem(BAR_BOTTOM_STORAGE_KEY, bottom ? '1' : '0');
   } catch {
     // Best-effort — if storage is full/blocked, the choice just isn't remembered.
   }
@@ -78,6 +59,7 @@ export function showImageOverlay(canvas: HTMLCanvasElement, title: string): void
   const img = overlay.querySelector<HTMLImageElement>('#image-overlay-img')!;
   img.src = canvas.toDataURL('image/png');
 
+  let stopListening = () => {};
   if (isMobile) {
     const rotateBtn = overlay.querySelector<HTMLButtonElement>('#image-overlay-rotate')!;
     let rotated = getStoredRotatePreference();
@@ -92,9 +74,11 @@ export function showImageOverlay(canvas: HTMLCanvasElement, title: string): void
       applyRotation();
     });
 
+    // The bar's position follows the app-wide one-hand "Controls" setting
+    // (src/controls.ts); this button is a shortcut that flips that same setting.
     const dockBtn = overlay.querySelector<HTMLButtonElement>('#image-overlay-dock')!;
-    let barBottom = getStoredBarBottomPreference();
     const applyDock = () => {
+      const barBottom = getControlsMode() === 'bottom';
       overlay.classList.toggle('image-overlay--bar-bottom', barBottom);
       // Icon/label describe where the bar will move to on tap.
       const label = barBottom ? 'Move controls to top' : 'Move controls to bottom';
@@ -104,13 +88,14 @@ export function showImageOverlay(canvas: HTMLCanvasElement, title: string): void
     };
     applyDock();
     dockBtn.addEventListener('click', () => {
-      barBottom = !barBottom;
-      setStoredBarBottomPreference(barBottom);
-      applyDock();
+      setControlsMode(getControlsMode() === 'bottom' ? 'default' : 'bottom');
     });
+    window.addEventListener(CONTROLS_CHANGE_EVENT, applyDock);
+    stopListening = () => window.removeEventListener(CONTROLS_CHANGE_EVENT, applyDock);
   }
 
   function close(): void {
+    stopListening();
     overlay.remove();
   }
   overlay.querySelector<HTMLButtonElement>('#image-overlay-close')!.addEventListener('click', close);

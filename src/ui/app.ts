@@ -4,6 +4,7 @@ import { renderHistoryTab } from './history';
 import { detectPlatform } from '../platform';
 import { icon, type IconName } from './icons';
 import { applyTheme, getThemePreference, nextThemePreference, setThemePreference, type ThemePreference } from '../theme';
+import { applyControlsMode, CONTROLS_CHANGE_EVENT, getControlsMode, setControlsMode } from '../controls';
 
 type TabId = 'cards' | 'generate' | 'history';
 
@@ -20,7 +21,10 @@ export function mountApp(root: HTMLElement): void {
         <h1>QR Web App</h1>
         <p class="subtitle">Generate &amp; save QR codes, fully offline</p>
       </div>
-      <button class="theme-toggle" id="theme-toggle" type="button"></button>
+      <div class="header-actions">
+        <button class="theme-toggle" id="controls-toggle" type="button"></button>
+        <button class="theme-toggle" id="theme-toggle" type="button"></button>
+      </div>
     </header>
     <div class="layout">
       <nav class="side-tabs" role="tablist" aria-orientation="vertical">
@@ -60,6 +64,24 @@ export function mountApp(root: HTMLElement): void {
     setThemePreference(themePref);
     renderThemeToggle();
   });
+
+  // One-hand mode (mobile only — the button is hidden on desktop via CSS).
+  const controlsToggle = root.querySelector<HTMLButtonElement>('#controls-toggle')!;
+  applyControlsMode(getControlsMode());
+  function renderControlsToggle(): void {
+    const bottom = getControlsMode() === 'bottom';
+    // Icon shows where the controls will move to on tap.
+    controlsToggle.innerHTML = icon(bottom ? 'dockTop' : 'dockBottom');
+    const label = bottom ? 'Controls: Bottom (one-hand). Switch to Default' : 'Controls: Default. Switch to Bottom (one-hand)';
+    controlsToggle.title = label;
+    controlsToggle.setAttribute('aria-label', label);
+    controlsToggle.setAttribute('aria-pressed', String(bottom));
+  }
+  renderControlsToggle();
+  controlsToggle.addEventListener('click', () => {
+    setControlsMode(getControlsMode() === 'bottom' ? 'default' : 'bottom');
+  });
+  window.addEventListener(CONTROLS_CHANGE_EVENT, renderControlsToggle);
 
   function showTab(tab: TabId): void {
     tabGenerate.setAttribute('aria-selected', String(tab === 'generate'));
