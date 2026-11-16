@@ -1,0 +1,1125 @@
+/* ------------------------------------------------------------------
+   Design tokens — minimal/flat. Neutral greys carry the UI; the single
+   indigo accent is reserved for selection, focus and status.
+   Three-state theming: OS preference by default, with
+   :root[data-theme] as an explicit override hook.
+   ------------------------------------------------------------------ */
+:root {
+  color-scheme: light;
+
+  --color-bg: #f5f6f8;
+  --color-surface: #ffffff;
+  --color-subtle: #eef0f3;
+  --color-subtle-hover: #e4e7ec;
+  --color-fg: #111318;
+  --color-muted: #646a76;
+  --color-border: #e2e5ea;
+  --color-border-strong: #cfd3da;
+
+  --color-accent: #4f46e5;
+  --color-accent-soft: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  --color-solid: #111318;
+  --color-solid-hover: #2a2d35;
+  --color-solid-fg: #ffffff;
+  --color-danger: #d92d20;
+  --color-danger-soft: color-mix(in srgb, var(--color-danger) 10%, transparent);
+
+  --shadow-float: 0 1px 2px rgba(16, 24, 40, 0.04), 0 8px 24px rgba(16, 24, 40, 0.08);
+  --ring: 0 0 0 3px color-mix(in srgb, var(--color-accent) 28%, transparent);
+
+  --radius: 16px;
+  --radius-sm: 10px;
+  --radius-pill: 999px;
+  --gap: 16px;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --dur: 0.16s;
+
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  font-size: 16px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --color-bg: #0e0f13;
+    --color-surface: #16181d;
+    --color-subtle: #1e2027;
+    --color-subtle-hover: #272a33;
+    --color-fg: #eceef2;
+    --color-muted: #9197a3;
+    --color-border: #262932;
+    --color-border-strong: #353945;
+    --color-accent: #8b93ff;
+    --color-solid: #eceef2;
+    --color-solid-hover: #ffffff;
+    --color-solid-fg: #0e0f13;
+    --color-danger: #ff6b5e;
+    --shadow-float: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px rgba(0, 0, 0, 0.45);
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --color-bg: #0e0f13;
+  --color-surface: #16181d;
+  --color-subtle: #1e2027;
+  --color-subtle-hover: #272a33;
+  --color-fg: #eceef2;
+  --color-muted: #9197a3;
+  --color-border: #262932;
+  --color-border-strong: #353945;
+  --color-accent: #8b93ff;
+  --color-solid: #eceef2;
+  --color-solid-hover: #ffffff;
+  --color-solid-fg: #0e0f13;
+  --color-danger: #ff6b5e;
+  --shadow-float: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Component rules below set `display`, which would otherwise beat the UA's
+   [hidden] rule and leave JS-hidden elements visible. */
+[hidden] {
+  display: none !important;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--color-bg);
+  color: var(--color-fg);
+  max-width: 100vw;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.icon {
+  width: 1.25em;
+  height: 1.25em;
+  flex: none;
+  display: block;
+}
+
+/* ------------------------------------------------------------------
+   Shell
+   ------------------------------------------------------------------ */
+#app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  gap: 20px;
+  max-width: 480px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 20px 16px;
+  padding-bottom: max(20px, env(safe-area-inset-bottom));
+}
+
+/* Tablet/desktop: a single flat panel on the page background. */
+@media (min-width: 640px) {
+  #app {
+    max-width: 800px;
+    margin: 48px auto;
+    min-height: auto;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 20px;
+    padding: 28px;
+  }
+}
+
+header.app-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+header.app-header .logo-mark {
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+  object-fit: contain;
+  background: var(--color-surface);
+}
+
+h1 {
+  font-size: 1.05rem;
+  font-weight: 650;
+  margin: 0;
+  letter-spacing: -0.015em;
+}
+
+.header-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  flex: none;
+}
+
+/* One-hand mode only exists on phones. */
+:root[data-platform='desktop'] #controls-toggle {
+  display: none;
+}
+
+.theme-toggle[aria-pressed='true'] {
+  color: var(--color-accent);
+  border-color: color-mix(in srgb, var(--color-accent) 40%, var(--color-border));
+}
+
+.theme-toggle {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--color-muted);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+
+.theme-toggle:hover {
+  background: var(--color-subtle);
+  color: var(--color-fg);
+}
+
+.app-header .subtitle {
+  font-size: 0.8rem;
+  color: var(--color-muted);
+  margin: 0;
+}
+
+.layout {
+  display: flex;
+  gap: 24px;
+  flex: 1;
+  min-height: 0;
+  align-items: flex-start;
+}
+
+.content-area {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+/* Per-tab heading row: title on the left, count pill on the right. */
+.tab-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tab-title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.tab-hint {
+  margin: -8px 0 0;
+  font-size: 0.82rem;
+  color: var(--color-muted);
+}
+
+.count-pill {
+  flex: none;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--color-subtle);
+  color: var(--color-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------------------------------------------
+   Tabs — rail by default, flat list on desktop, bottom bar on mobile
+   ------------------------------------------------------------------ */
+.side-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: none;
+  width: 72px;
+}
+
+.side-tabs button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 56px;
+  border: none;
+  background: none;
+  color: var(--color-muted);
+  font-size: 0.7rem;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
+  cursor: pointer;
+  text-align: center;
+  padding: 6px 4px;
+}
+
+.side-tabs button:hover {
+  color: var(--color-fg);
+  background: var(--color-subtle);
+}
+
+.side-tabs .tab-icon {
+  display: grid;
+  place-items: center;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.side-tabs .tab-label {
+  line-height: 1.1;
+}
+
+.side-tabs button[aria-selected='true'] {
+  color: var(--color-fg);
+  background: var(--color-subtle);
+}
+
+.side-tabs button[aria-selected='true'] .tab-icon {
+  color: var(--color-accent);
+}
+
+/* Desktop OS: left rail, icon + label side by side. */
+:root[data-platform='desktop'] .side-tabs {
+  width: 176px;
+}
+
+:root[data-platform='desktop'] .side-tabs button {
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: 10px;
+  min-height: 40px;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  font-weight: 550;
+}
+
+:root[data-platform='desktop'] .side-tabs .tab-icon {
+  font-size: 0.95rem;
+}
+
+/* Mobile OS: translucent bottom tab bar, fixed to the viewport, safe-area aware. */
+:root[data-platform='mobile'] .side-tabs {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: auto;
+  flex-direction: row;
+  justify-content: space-around;
+  gap: 4px;
+  padding: 6px max(8px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+  background: color-mix(in srgb, var(--color-surface) 82%, transparent);
+  -webkit-backdrop-filter: saturate(180%) blur(16px);
+  backdrop-filter: saturate(180%) blur(16px);
+  border-top: 1px solid var(--color-border);
+  z-index: 20;
+}
+
+:root[data-platform='mobile'] .side-tabs button {
+  flex: 1;
+  min-height: 52px;
+  background: none;
+}
+
+/* Active pill sits behind the icon only, Material-3 style. */
+:root[data-platform='mobile'] .side-tabs .tab-icon {
+  width: 56px;
+  height: 30px;
+  border-radius: var(--radius-pill);
+  transition: background-color var(--dur) var(--ease);
+}
+
+:root[data-platform='mobile'] .side-tabs button[aria-selected='true'] .tab-icon {
+  background: var(--color-accent-soft);
+}
+
+:root[data-platform='mobile'] .content-area {
+  padding-bottom: 76px;
+}
+
+:root[data-platform='mobile'] .version-badge {
+  bottom: calc(70px + max(8px, env(safe-area-inset-bottom)));
+}
+
+/* ------------------------------------------------------------------
+   Form controls
+   ------------------------------------------------------------------ */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+
+label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-muted);
+  margin-bottom: 6px;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  font-size: 1rem;
+  font-family: inherit;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: var(--color-subtle);
+  color: var(--color-fg);
+  transition: border-color var(--dur) var(--ease), background-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+
+input:hover,
+select:hover,
+textarea:hover {
+  background: var(--color-subtle-hover);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  background: var(--color-surface);
+  border-color: var(--color-accent);
+  box-shadow: var(--ring);
+}
+
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 36px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+}
+
+textarea {
+  resize: vertical;
+}
+
+input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+  accent-color: var(--color-accent);
+}
+
+input[type='file'] {
+  width: auto;
+  min-height: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+
+input[type='file']::file-selector-button {
+  margin-right: 10px;
+  min-height: 36px;
+  padding: 6px 14px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--color-fg);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: var(--color-fg);
+  cursor: pointer;
+}
+
+.field {
+  margin: 0;
+}
+
+/* ------------------------------------------------------------------
+   Buttons
+   ------------------------------------------------------------------ */
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+button.primary,
+button.secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  font-size: 0.92rem;
+  font-weight: 600;
+  transition: background-color var(--dur) var(--ease), border-color var(--dur) var(--ease), color var(--dur) var(--ease), transform 0.08s var(--ease);
+}
+
+button.primary:active:not(:disabled),
+button.secondary:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+button.primary {
+  background: var(--color-solid);
+  color: var(--color-solid-fg);
+  border: 1px solid var(--color-solid);
+}
+
+button.primary:hover:not(:disabled) {
+  background: var(--color-solid-hover);
+  border-color: var(--color-solid-hover);
+}
+
+button.primary:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+button.secondary {
+  background: var(--color-surface);
+  color: var(--color-fg);
+  border: 1px solid var(--color-border-strong);
+}
+
+button.secondary:hover {
+  background: var(--color-subtle);
+}
+
+button.secondary.danger {
+  color: var(--color-danger);
+}
+
+button.secondary.danger:hover {
+  border-color: color-mix(in srgb, var(--color-danger) 45%, transparent);
+  background: var(--color-danger-soft);
+}
+
+button.with-icon .icon {
+  width: 1.1em;
+  height: 1.1em;
+}
+
+/* ------------------------------------------------------------------
+   Output panel + carousel
+   ------------------------------------------------------------------ */
+.qr-output {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.qr-output canvas:not(.card-canvas-preview) {
+  display: block;
+  width: min(100%, 320px);
+  aspect-ratio: 1 / 1;
+  height: auto;
+  border-radius: var(--radius-sm);
+}
+
+.card-viewer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  /* Vertical swipe/scroll is handled by JS (looping card navigation) —
+     stop the browser's own scroll gesture from competing with it. */
+  touch-action: none;
+}
+
+/* While the card editor is open, switching cards in the carousel above it
+   would silently discard unsaved edits — lock it out until Save/Cancel. */
+.carousel-locked {
+  pointer-events: none;
+  opacity: 0.45;
+  transition: opacity var(--dur) var(--ease);
+}
+
+.card-nav-btn {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 28px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-pill);
+  color: var(--color-muted);
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+  touch-action: auto;
+  transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+
+.card-nav-btn:hover {
+  color: var(--color-fg);
+  background: var(--color-subtle);
+}
+
+.card-position {
+  margin: 0;
+  padding: 2px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--color-subtle);
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.card-preview-inner {
+  /* Hosts the composed canvas (see composeCardImage.ts) — the same element
+     shown here is what "Download card image" saves, so preview and saved
+     file can never drift apart. */
+  width: 600px;
+  max-width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+  border-radius: 12px;
+  box-shadow: var(--shadow-float);
+  overflow: hidden;
+  line-height: 0;
+}
+
+/* On mobile, width alone (max-width:100%) fits portrait screens fine, but on
+   a short/landscape viewport the 3:2 card can grow taller than the space
+   left after the header, nav buttons and bottom tab bar. Cap it by
+   available height too — 3:2 means width = height * 1.5 — so it always
+   fits the screen while keeping the exact same aspect ratio either way.
+   ASSUMPTION: 42dvh is an estimate of the vertical room left around the
+   preview; only takes effect when it's smaller than the width-based size. */
+:root[data-platform='mobile'] .card-preview-inner {
+  width: min(100%, calc(42dvh * 1.5));
+}
+
+.card-canvas-preview {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 2;
+  /* Intrinsic canvas pixel size is 1200x800 (set in composeCardImage.ts, 3:2);
+     CSS just scales it down responsively to fit the 600x400 box without
+     ever changing that ratio. */
+}
+
+.carousel-caption {
+  margin: 0 0 2px;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-fg);
+}
+
+.history-preview-host {
+  display: block;
+  line-height: 0;
+}
+
+#type-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+#type-fields:empty,
+#editor-slot:empty {
+  display: none;
+}
+
+/* ------------------------------------------------------------------
+   Card editor
+   ------------------------------------------------------------------ */
+#editor-slot:not(:empty) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  padding: 18px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.logo-upload-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.logo-upload-row img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-subtle);
+}
+
+.logo-upload-row button.secondary {
+  min-height: 36px;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+}
+
+.segmented-control {
+  display: inline-flex;
+  gap: 2px;
+  margin-top: 10px;
+  padding: 3px;
+  background: var(--color-subtle);
+  border-radius: var(--radius-pill);
+  width: fit-content;
+}
+
+.segmented-option {
+  min-height: 32px;
+  padding: 5px 16px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+
+.segmented-option:hover {
+  color: var(--color-fg);
+}
+
+.segmented-option.active {
+  background: var(--color-surface);
+  color: var(--color-fg);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.12);
+}
+
+/* ------------------------------------------------------------------
+   Messages
+   ------------------------------------------------------------------ */
+.empty-state {
+  text-align: center;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  padding: 36px 16px;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius);
+}
+
+.error-text {
+  margin: 0;
+  color: var(--color-danger);
+  background: var(--color-danger-soft);
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+}
+
+.status-text {
+  margin: 0;
+  color: var(--color-accent);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.update-banner {
+  position: fixed;
+  left: 50%;
+  top: max(12px, env(safe-area-inset-top));
+  transform: translateX(-50%);
+  width: min(calc(100% - 24px), 520px);
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 8px 8px 16px;
+  background: var(--color-solid);
+  color: var(--color-solid-fg);
+  font-size: 0.88rem;
+  font-weight: 500;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-float);
+}
+
+.update-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+}
+
+.update-banner button.primary {
+  min-height: 34px;
+  padding: 6px 14px;
+  background: var(--color-solid-fg);
+  color: var(--color-solid);
+  border-color: var(--color-solid-fg);
+}
+
+.update-banner button.secondary {
+  min-height: 34px;
+  width: 34px;
+  padding: 0;
+  background: transparent;
+  border-color: transparent;
+  color: var(--color-solid-fg);
+  opacity: 0.8;
+}
+
+.update-banner button.secondary:hover {
+  opacity: 1;
+  background: color-mix(in srgb, var(--color-solid-fg) 12%, transparent);
+}
+
+/* ------------------------------------------------------------------
+   Image overlay
+   ------------------------------------------------------------------ */
+.image-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  background: rgba(10, 11, 14, 0.9);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.image-overlay-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: max(10px, env(safe-area-inset-top)) 14px 10px max(14px, env(safe-area-inset-left));
+  color: #fff;
+  font-weight: 600;
+}
+
+.image-overlay-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.image-overlay-bar button.secondary {
+  min-height: 40px;
+  width: 40px;
+  padding: 0;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: transparent;
+  color: #fff;
+}
+
+.image-overlay-bar button.secondary:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.image-overlay-bar button.secondary[aria-pressed='true'] {
+  background: #fff;
+  color: #111318;
+}
+
+.image-overlay-hint {
+  margin: 0;
+  padding: 0 14px 10px;
+  text-align: center;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.image-overlay-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px max(14px, env(safe-area-inset-bottom));
+  overflow: auto;
+}
+
+/* Mobile: the bar and hint float over the image instead of pushing it down,
+   so the image itself can use the entire screen — maximized for a
+   screenshot/share gesture. */
+.image-overlay--fullscreen .image-overlay-body {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+}
+
+.image-overlay--fullscreen .image-overlay-body img {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* Turns the (landscape) image on its side to fill a portrait phone screen
+   far more fully — width/height are pre-swapped to the viewport's opposite
+   axis so the rotated box still fits exactly within it. Uses dvh/dvw
+   (dynamic viewport units), not vh/vw: on mobile Safari/Chrome, vh/vw
+   include the area hidden behind the collapsing address bar, so the box
+   can end up larger than what's actually visible — the same mismatch
+   `.card-preview-inner`'s mobile rule already works around with dvh. */
+.image-overlay--fullscreen.image-overlay--rotated .image-overlay-body img {
+  width: 100dvh;
+  height: 100dvw;
+  max-width: 100dvh;
+  max-height: 100dvw;
+  transform: rotate(90deg);
+}
+
+.image-overlay--fullscreen .image-overlay-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.55), transparent);
+}
+
+.image-overlay--fullscreen .image-overlay-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  padding: 10px 14px max(10px, env(safe-area-inset-bottom));
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.55), transparent);
+}
+
+/* One-hand mode (mobile): bar docks at the bottom within thumb reach, and
+   the save hint takes its place at the top. */
+.image-overlay--fullscreen.image-overlay--bar-bottom .image-overlay-bar {
+  top: auto;
+  bottom: 0;
+  padding: 10px max(14px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent);
+}
+
+.image-overlay--fullscreen.image-overlay--bar-bottom .image-overlay-hint {
+  top: 0;
+  bottom: auto;
+  padding: max(10px, env(safe-area-inset-top)) 14px 10px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.55), transparent);
+}
+
+.image-overlay-body img {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 12px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+}
+
+/* ------------------------------------------------------------------
+   Misc
+   ------------------------------------------------------------------ */
+.version-badge {
+  position: fixed;
+  right: max(10px, env(safe-area-inset-right));
+  bottom: max(8px, env(safe-area-inset-bottom));
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-muted);
+  opacity: 0.6;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+}
+
+.row > * {
+  flex: 1;
+}
+
+/* Toolbars that can hold several buttons at once (the carousel's Download
+   QR / Download card image / View image / Edit / Delete, and the QR
+   generator's Download PNG / View image / Save to history) — on narrow
+   screens their labels together are wider than the viewport, so default to
+   icon-only there (label kept as the button's accessible name/tooltip) and
+   bring the label back once there's room, at the same breakpoint the rest
+   of the layout switches to its wider desktop treatment. */
+#carousel-toolbar,
+#qr-output-toolbar {
+  flex-wrap: wrap;
+  width: 100%;
+  justify-content: center;
+}
+
+#carousel-toolbar button,
+#qr-output-toolbar button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px;
+}
+
+#carousel-toolbar .btn-icon,
+#qr-output-toolbar .btn-icon {
+  display: grid;
+  place-items: center;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+#carousel-toolbar .btn-label,
+#qr-output-toolbar .btn-label {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  #carousel-toolbar button,
+  #qr-output-toolbar button {
+    padding: 10px 14px;
+  }
+
+  #carousel-toolbar .btn-label,
+  #qr-output-toolbar .btn-label {
+    display: inline;
+  }
+}
+
+/* ------------------------------------------------------------------
+   One-hand "Controls: Bottom" mode (mobile only — src/controls.ts).
+   Everything tappable moves within thumb reach, above the bottom tab bar.
+   ------------------------------------------------------------------ */
+:root {
+  /* Bottom tab bar height excluding the safe-area inset (6px + 52px button). */
+  --tabbar-h: 58px;
+  --above-tabbar: calc(var(--tabbar-h) + max(6px, env(safe-area-inset-bottom)));
+}
+
+/* Theme + Controls buttons leave the header and sit at the right end of the tab bar. */
+:root[data-platform='mobile'][data-controls='bottom'] .header-actions {
+  position: fixed;
+  right: max(8px, env(safe-area-inset-right));
+  bottom: max(6px, env(safe-area-inset-bottom));
+  height: 52px;
+  align-items: center;
+  gap: 6px;
+  z-index: 21;
+}
+
+:root[data-platform='mobile'][data-controls='bottom'] .side-tabs {
+  padding-right: calc(max(8px, env(safe-area-inset-right)) + 2 * 40px + 6px + 8px);
+}
+
+/* Card/History ▲▼: side by side under the preview instead of above/below it. */
+:root[data-platform='mobile'][data-controls='bottom'] .card-viewer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 12px;
+  row-gap: 8px;
+}
+
+:root[data-platform='mobile'][data-controls='bottom'] .card-viewer > :not(.card-nav-btn) {
+  grid-column: 1 / -1;
+}
+
+:root[data-platform='mobile'][data-controls='bottom'] .card-nav-btn {
+  /* Grid auto-placement follows `order`, so both buttons land in a final row. */
+  order: 1;
+  width: 64px;
+  height: 40px;
+  background: var(--color-subtle);
+}
+
+:root[data-platform='mobile'][data-controls='bottom'] #carousel-nav-up {
+  justify-self: end;
+}
+
+:root[data-platform='mobile'][data-controls='bottom'] #carousel-nav-down {
+  justify-self: start;
+}
+
+/* Save/Cancel and Generate stay pinned just above the tab bar while
+   scrolling. Sticky (not fixed) keeps their own space in the flow, so no
+   field ends up permanently hidden behind them. */
+:root[data-platform='mobile'][data-controls='bottom'] .editor-actions,
+:root[data-platform='mobile'][data-controls='bottom'] #generate-btn {
+  position: sticky;
+  bottom: calc(var(--above-tabbar) + 8px);
+  z-index: 5;
+  box-shadow: var(--shadow-float);
+}
+
+:root[data-platform='mobile'][data-controls='bottom'] .editor-actions {
+  padding: 8px;
+  margin: -8px;
+  background: var(--color-surface);
+  border-radius: calc(var(--radius-sm) + 8px);
+}
+
+/* Update banner pops up from the bottom, above the tab bar. */
+:root[data-platform='mobile'][data-controls='bottom'] .update-banner {
+  top: auto;
+  bottom: calc(var(--above-tabbar) + 12px);
+}

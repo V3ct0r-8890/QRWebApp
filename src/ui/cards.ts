@@ -1,0 +1,312 @@
+import { buildVCardPayload } from '../qr/encode';
+import { renderQrToCanvas, saveCanvasImage } from '../qr/render';
+import {
+  CardLimitError,
+  MAX_CARDS,
+  deleteCard,
+  generateCardId,
+  listCards,
+  saveCard,
+  type CardLayout,
+  type CardProfile,
+  type CardTheme,
+  type LogoAlign,
+} from '../cards/store';
+import { resizeImageToDataUrl } from '../util/image';
+import { LOGO_BOX_HEIGHT, LOGO_BOX_WIDTH, composeCardImage } from '../cards/composeCardImage';
+import { renderCarousel } from './carousel';
+import { showImageOverlay } from './imageViewer';
+import { icon } from './icons';
+
+export function renderCardsTab(container: HTMLElement): void {
+  let editingId: string | null = null;
+  let setCarouselLocked: (locked: boolean) => void = () => {};
+
+  function renderTab(preferredId?: string): void {
+    const cards = listCards();
+    container.innerHTML = `
+      <div class="tab-head">
+        <h2 class="tab-title">My Cards</h2>
+        <span class="count-pill">${cards.length} / ${MAX_CARDS} saved</span>
+      </div>
+      <div id="carousel-slot"></div>
+      <button class="primary with-icon" id="add-card-btn" type="button" ${cards.length >= MAX_CARDS ? 'disabled' : ''}>
+        ${icon('plus')}<span>New card</span>
+      </button>
+      <p class="error-text" id="list-error" hidden></p>
+      <div id="editor-slot"></div>
+    `;
+
+    // Per-card caches of in-flight/finished renders — shared between the
+    // carousel preview and the toolbar buttons so each card's QR and composed
+    // image are only ever rendered once.
+    const qrCache = new Map<string, Promise<HTMLCanvasElement>>();
+    function getQrCanvas(card: CardProfile): Promise<HTMLCanvasElement> {
+      let pending = qrCache.get(card.id);
+      if (!pending) {
+        const c = document.createElement('canvas');
+        pending = renderQrToCanvas(c, buildVCardPayload(card)).then(() => c);
+        qrCache.set(card.id, pending);
+      }
+      return pending;
+    }
+    const composedCache = new Map<string, Promise<HTMLCanvasElement>>();
+    function getComposedCard(card: CardProfile): Promise<HTMLCanvasElement> {
+      let pending = composedCache.get(card.id);
+      if (!pending) {
+        pending = getQrCanvas(card).then((qrCanvas) => composeCardImage(card, qrCanvas));
+        composedCache.set(card.id, pending);
+      }
+      return pending;
+    }
+
+    const carouselSlot = container.querySelector<HTMLDivElement>('#carousel-slot')!;
+    renderCarousel<CardProfile>(carouselSlot, {
+      items: cards,
+      initialId: preferredId,
+      previewHostClassName: 'card-preview-inner',
+      canvasClassName: 'card-canvas-preview',
+      emptyMessage: 'No saved cards yet — add one below.',
+      errorMessage: 'Could not render the card preview.',
+      // The on-screen preview renders the SAME composed canvas that gets
+      // downloaded, so the two can never drift apart.
+      composeCanvas: getComposedCard,
+      buttons: [
+        {
+          label: 'Download QR',
+          icon: 'download',
+          onClick: async (card) => {
+            const qrCanvas = await getQrCanvas(card);
+            await saveCanvasImage(qrCanvas, `${card.label || 'card'}-qr`, `${card.label || 'card'} QR code`);
+          },
+        },
+        {
+          label: 'Download card image',
+          icon: 'image',
+          onClick: async (card) => {
+            await saveCanvasImage(await getComposedCard(card), card.label || 'card', card.label || 'Card');
+          },
+        },
+        {
+          label: 'View image',
+          icon: 'eye',
+          className: 'secondary',
+          onClick: async (card) => {
+            showImageOverlay(await getComposedCard(card), card.label || 'Card');
+          },
+        },
+        {
+          label: 'Edit',
+          icon: 'edit',
+          onClick: (card) => {
+            editingId = card.id;
+            showEditor(card);
+          },
+        },
+        {
+          label: 'Delete',
+          icon: 'trash',
+          className: 'secondary danger',
+          onClick: (card) => {
+            if (!window.confirm(`Delete the card "${card.label}"? This cannot be undone.`)) return;
+            deleteCard(card.id);
+            renderTab();
+          },
+        },
+      ],
+    });
+
+    const addCardBtn = container.querySelector<HTMLButtonElement>('#add-card-btn')!;
+    addCardBtn.addEventListener('click', () => {
+      editingId = null;
+      showEditor(null);
+    });
+
+    // While the editor is open, the carousel above it must not be navigable
+    // — switching cards mid-edit would silently discard unsaved changes.
+    setCarouselLocked = (locked: boolean) => {
+      carouselSlot.classList.toggle('carousel-locked', locked);
+      addCardBtn.disabled = locked || cards.length >= MAX_CARDS;
+    };
+  }
+
+  function showEditor(existing: CardProfile | null): void {
+    setCarouselLocked(true);
+    const slot = container.querySelector<HTMLDivElement>('#editor-slot')!;
+    slot.innerHTML = `
+      <div class="field">
+        <label for="c-logo">Logo</label>
+        <div class="logo-upload-row">
+          <img id="c-logo-preview" alt="" hidden />
+          <input id="c-logo" type="file" accept="image/*" />
+          <button class="secondary" id="c-logo-remove" type="button" hidden>Remove</button>
+        </div>
+        <div class="segmented-control" id="c-logo-align" role="radiogroup" aria-label="Logo alignment">
+          <button class="segmented-option" type="button" data-value="left">Left</button>
+          <button class="segmented-option" type="button" data-value="center">Center</button>
+          <button class="segmented-option" type="button" data-value="right">Right</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="c-theme">Card color theme</label>
+        <select id="c-theme">
+          <option value="light">Light</option>
+          <option value="dark">Dark</option>
+          <option value="blue">Blue (pastel)</option>
+          <option value="pink">Pink (pastel)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="c-layout">Card layout</label>
+        <select id="c-layout">
+          <option value="top-left">Logo top · QR left · contact right</option>
+          <option value="bottom-left">Logo bottom · QR left · contact right</option>
+          <option value="top-right">Logo top · contact left · QR right</option>
+          <option value="bottom-right">Logo bottom · contact left · QR right</option>
+        </select>
+      </div>
+      <div class="field"><label for="c-label">Slot label</label><input id="c-label" /></div>
+      <div class="field"><label for="c-name">Full name *</label><input id="c-name" /></div>
+      <div class="field"><label for="c-org">Organization</label><input id="c-org" /></div>
+      <div class="field"><label for="c-title">Title</label><input id="c-title" /></div>
+      <div class="field"><label for="c-phone">Phone</label><input id="c-phone" type="tel" /></div>
+      <div class="field"><label for="c-email">Email</label><input id="c-email" type="email" /></div>
+      <div class="field"><label for="c-url">Website</label><input id="c-url" type="text" /></div>
+      <div class="field"><label for="c-address">Address</label><textarea id="c-address" rows="2"></textarea></div>
+      <div class="field"><label for="c-note">Note</label><textarea id="c-note" rows="2"></textarea></div>
+      <div class="row editor-actions">
+        <button class="primary" id="c-save" type="button">Save</button>
+        <button class="secondary" id="c-cancel" type="button">Cancel</button>
+      </div>
+      <p class="error-text" id="c-error" hidden></p>
+    `;
+
+    let logoDataUrl: string | undefined = existing?.logo;
+    const logoInput = slot.querySelector<HTMLInputElement>('#c-logo')!;
+    const logoPreview = slot.querySelector<HTMLImageElement>('#c-logo-preview')!;
+    const logoRemoveBtn = slot.querySelector<HTMLButtonElement>('#c-logo-remove')!;
+
+    function refreshLogoPreview(): void {
+      if (logoDataUrl) {
+        logoPreview.src = logoDataUrl;
+        logoPreview.hidden = false;
+        logoRemoveBtn.hidden = false;
+      } else {
+        logoPreview.hidden = true;
+        logoRemoveBtn.hidden = true;
+      }
+    }
+    refreshLogoPreview();
+
+    logoInput.addEventListener('change', () => {
+      const file = logoInput.files?.[0];
+      if (!file) return;
+      resizeImageToDataUrl(file, LOGO_BOX_WIDTH, LOGO_BOX_HEIGHT)
+        .then((dataUrl) => {
+          logoDataUrl = dataUrl;
+          refreshLogoPreview();
+        })
+        .catch((err) => {
+          errorEl.textContent = err instanceof Error ? err.message : 'Could not process the image.';
+          errorEl.hidden = false;
+        });
+    });
+    logoRemoveBtn.addEventListener('click', () => {
+      logoDataUrl = undefined;
+      logoInput.value = '';
+      refreshLogoPreview();
+    });
+
+    let logoAlign: LogoAlign = existing?.logoAlign ?? 'center';
+    const logoAlignGroup = slot.querySelector<HTMLDivElement>('#c-logo-align')!;
+    const logoAlignButtons = Array.from(logoAlignGroup.querySelectorAll<HTMLButtonElement>('.segmented-option'));
+    function refreshLogoAlign(): void {
+      for (const btn of logoAlignButtons) {
+        btn.classList.toggle('active', btn.dataset.value === logoAlign);
+      }
+    }
+    for (const btn of logoAlignButtons) {
+      btn.addEventListener('click', () => {
+        logoAlign = btn.dataset.value as LogoAlign;
+        refreshLogoAlign();
+      });
+    }
+    refreshLogoAlign();
+
+    const themeSelect = slot.querySelector<HTMLSelectElement>('#c-theme')!;
+    themeSelect.value = existing?.theme ?? 'light';
+
+    const layoutSelect = slot.querySelector<HTMLSelectElement>('#c-layout')!;
+    layoutSelect.value = existing?.layout ?? 'top-left';
+
+    const fields: Record<string, HTMLInputElement | HTMLTextAreaElement> = {
+      label: slot.querySelector('#c-label')!,
+      fullName: slot.querySelector('#c-name')!,
+      org: slot.querySelector('#c-org')!,
+      title: slot.querySelector('#c-title')!,
+      phone: slot.querySelector('#c-phone')!,
+      email: slot.querySelector('#c-email')!,
+      url: slot.querySelector('#c-url')!,
+      address: slot.querySelector('#c-address')!,
+      note: slot.querySelector('#c-note')!,
+    };
+    const errorEl = slot.querySelector<HTMLParagraphElement>('#c-error')!;
+    if (existing) {
+      fields.label.value = existing.label;
+      fields.fullName.value = existing.fullName;
+      fields.org.value = existing.org ?? '';
+      fields.title.value = existing.title ?? '';
+      fields.phone.value = existing.phone ?? '';
+      fields.email.value = existing.email ?? '';
+      fields.url.value = existing.url ?? '';
+      fields.address.value = existing.address ?? '';
+      fields.note.value = existing.note ?? '';
+    }
+
+    slot.querySelector<HTMLButtonElement>('#c-save')!.addEventListener('click', () => {
+      errorEl.hidden = true;
+      const fullName = fields.fullName.value.trim();
+      if (!fullName) {
+        errorEl.textContent = 'Full name is required.';
+        errorEl.hidden = false;
+        return;
+      }
+      const card: CardProfile = {
+        id: existing?.id ?? editingId ?? generateCardId(),
+        label: fields.label.value.trim() || fullName,
+        fullName,
+        org: fields.org.value.trim() || undefined,
+        title: fields.title.value.trim() || undefined,
+        phone: fields.phone.value.trim() || undefined,
+        email: fields.email.value.trim() || undefined,
+        url: fields.url.value.trim() || undefined,
+        address: fields.address.value.trim() || undefined,
+        note: fields.note.value.trim() || undefined,
+        logo: logoDataUrl,
+        logoAlign,
+        theme: themeSelect.value as CardTheme,
+        layout: layoutSelect.value as CardLayout,
+      };
+      try {
+        saveCard(card);
+        const savedId = card.id;
+        editingId = null;
+        renderTab(savedId);
+      } catch (err) {
+        errorEl.textContent =
+          err instanceof CardLimitError
+            ? err.message
+            : 'Could not save the card — browser storage is full or unavailable.';
+        errorEl.hidden = false;
+      }
+    });
+
+    slot.querySelector<HTMLButtonElement>('#c-cancel')!.addEventListener('click', () => {
+      editingId = null;
+      slot.innerHTML = '';
+      setCarouselLocked(false);
+    });
+  }
+
+  renderTab();
+}
